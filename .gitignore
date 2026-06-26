@@ -9,4 +9,6 @@ Thumbs.db
 # Node / Electron build artifacts
 node_modules/
 out/
+dist/
+release/
 *.log
