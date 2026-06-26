@@ -4,46 +4,90 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Screen Recorder Pro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:#0f1117;--surface:#1a1d27;--surface2:#252836;
-  --accent:#6c63ff;--accent2:#ff6584;--text:#e8eaf6;--sub:#9095a8;
+  --bg:#0a0b10;--surface:#141620;--surface2:#1c1f2e;
+  --accent:#7c73ff;--accent2:#ff6584;--text:#eaeef5;--sub:#7f85a3;
   --red:#ef4444;--green:#22c55e;--yellow:#f59e0b;
+  --radius:12px;--radius-sm:8px;--radius-lg:16px;
+  --shadow:0 2px 16px rgba(0,0,0,.3);
+  --shadow-lg:0 8px 40px rgba(0,0,0,.5);
+  --transition:.2s cubic-bezier(.4,0,.2,1);
 }
-body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:24px 20px}
-h1{font-size:22px;font-weight:700;letter-spacing:.5px;margin-bottom:4px}
-.subtitle{color:var(--sub);font-size:13px;margin-bottom:24px}
+html{scrollbar-color:var(--surface2) transparent;scrollbar-width:thin}
+::-webkit-scrollbar{width:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:3px}
+body{
+  font-family:'Inter','Segoe UI',system-ui,sans-serif;
+  background:var(--bg);color:var(--text);
+  min-height:100vh;padding:28px 24px;
+  background-image:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(124,115,255,.06),transparent)
+}
+h1{font-size:23px;font-weight:800;letter-spacing:-.3px;margin-bottom:2px;display:flex;align-items:center;gap:8px}
+h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.subtitle{color:var(--sub);font-size:13px;margin-bottom:20px;font-weight:400}
 
 /* ── Mode cards ── */
 .mode-grid{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
 .mode-card{
-  flex:1;min-width:130px;padding:14px 16px;border-radius:12px;
-  background:var(--surface);border:2px solid transparent;cursor:pointer;
-  transition:border .15s,background .15s;user-select:none
+  flex:1;min-width:130px;padding:16px 18px;border-radius:var(--radius);
+  background:var(--surface);border:1.5px solid transparent;cursor:pointer;
+  transition:all var(--transition);user-select:none;
+  box-shadow:var(--shadow);position:relative;overflow:hidden
 }
-.mode-card:hover{background:var(--surface2)}
-.mode-card.active{border-color:var(--accent);background:var(--surface2)}
+.mode-card::before{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(135deg,transparent 60%,rgba(124,115,255,.04));
+  pointer-events:none
+}
+.mode-card:hover{background:var(--surface2);transform:translateY(-1px);border-color:rgba(124,115,255,.2)}
+.mode-card.active{border-color:var(--accent);background:linear-gradient(135deg,var(--surface2),rgba(124,115,255,.08));box-shadow:0 2px 20px rgba(124,115,255,.15)}
 .mode-card input{display:none}
-.mode-card .icon{font-size:22px;margin-bottom:6px}
-.mode-card .label{font-weight:600;font-size:14px}
-.mode-card .desc{color:var(--sub);font-size:11px;margin-top:3px}
+.mode-card .icon{font-size:24px;margin-bottom:8px;display:inline-block}
+.mode-card .label{font-weight:700;font-size:14px;letter-spacing:-.2px}
+.mode-card .desc{color:var(--sub);font-size:11px;margin-top:4px;line-height:1.4}
 
 /* ── Options row ── */
-.options{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
-.opt-group{display:flex;flex-direction:column;gap:4px}
-.opt-group label{font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
-select,input[type=range]{
-  background:var(--surface2);border:1px solid #333;color:var(--text);
-  padding:5px 10px;border-radius:8px;font-size:13px;outline:none;cursor:pointer
+.options{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;align-items:flex-end}
+.opt-group{display:flex;flex-direction:column;gap:5px}
+.opt-group label{font-size:10px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
+select{
+  background:var(--surface);border:1.5px solid rgba(255,255,255,.06);color:var(--text);
+  padding:7px 12px;border-radius:var(--radius-sm);font-size:13px;outline:none;cursor:pointer;
+  transition:border-color var(--transition);font-family:inherit;font-weight:500;
+  min-width:100px;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237f85a3' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 10px center;padding-right:32px
 }
-select:focus{border-color:var(--accent)}
+select:hover{border-color:rgba(255,255,255,.12)}
+select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(124,115,255,.15)}
+input[type=range]{
+  -webkit-appearance:none;appearance:none;background:transparent;cursor:pointer;
+  width:90px;padding:0;border:none
+}
+input[type=range]::-webkit-slider-runnable-track{
+  height:5px;background:var(--surface2);border-radius:3px
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:16px;height:16px;border-radius:50%;
+  background:var(--accent);border:2px solid var(--bg);margin-top:-5.5px;
+  box-shadow:0 0 0 2px var(--accent);cursor:pointer;transition:transform .15s
+}
+input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+input[type=range]::-moz-range-track{height:5px;background:var(--surface2);border-radius:3px;border:none}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid var(--bg);cursor:pointer}
 
 /* ── Instruction box ── */
 #instr{
   background:var(--surface);border-left:3px solid var(--accent);
-  border-radius:8px;padding:12px 16px;margin-bottom:16px;
-  font-size:13px;line-height:1.8;display:none
+  border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;
+  font-size:13px;line-height:1.8;display:none;
+  box-shadow:var(--shadow)
 }
 #instr b{color:var(--accent)}
 #instr .warn{color:var(--accent2)}
@@ -51,116 +95,153 @@ select:focus{border-color:var(--accent)}
 /* ── Controls ── */
 .ctrl-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center}
 .btn{
-  padding:9px 22px;border-radius:10px;border:none;font-size:14px;font-weight:600;
-  cursor:pointer;transition:opacity .15s,transform .1s;letter-spacing:.3px
+  padding:10px 24px;border-radius:var(--radius-sm);border:none;font-size:13px;font-weight:600;
+  cursor:pointer;transition:all var(--transition);letter-spacing:.3px;
+  font-family:inherit;position:relative;overflow:hidden;
+  display:inline-flex;align-items:center;gap:6px
 }
-.btn:disabled{opacity:.3;cursor:default}
-.btn:not(:disabled):active{transform:scale(.96)}
-.btn-primary{background:var(--accent);color:#fff}
-.btn-danger{background:var(--red);color:#fff}
-.btn-warn{background:var(--yellow);color:#000}
-.btn-ghost{background:var(--surface2);color:var(--text);border:1px solid #333}
+.btn::after{
+  content:'';position:absolute;inset:0;border-radius:inherit;
+  background:linear-gradient(135deg,transparent 50%,rgba(255,255,255,.06));
+  pointer-events:none
+}
+.btn:disabled{opacity:.25;cursor:default;transform:none}
+.btn:not(:disabled):hover{transform:translateY(-1px)}
+.btn:not(:disabled):active{transform:translateY(0) scale(.97)}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),#8b83ff);color:#fff;
+  box-shadow:0 2px 12px rgba(124,115,255,.3)
+}
+.btn-primary:not(:disabled):hover{box-shadow:0 4px 20px rgba(124,115,255,.4)}
+.btn-danger{
+  background:linear-gradient(135deg,var(--red),#ff5555);color:#fff;
+  box-shadow:0 2px 12px rgba(239,68,68,.25)
+}
+.btn-danger:not(:disabled):hover{box-shadow:0 4px 20px rgba(239,68,68,.35)}
+.btn-warn{
+  background:linear-gradient(135deg,var(--yellow),#fbbf24);color:#1a1a1a;
+  box-shadow:0 2px 12px rgba(245,158,11,.25)
+}
+.btn-warn:not(:disabled):hover{box-shadow:0 4px 20px rgba(245,158,11,.35)}
+.btn-ghost{
+  background:var(--surface);color:var(--text);border:1.5px solid rgba(255,255,255,.06);
+  box-shadow:var(--shadow)
+}
+.btn-ghost:not(:disabled):hover{background:var(--surface2);border-color:rgba(255,255,255,.1)}
 
 /* ── Status bar ── */
-.status-bar{display:flex;align-items:center;gap:16px;margin-bottom:12px;min-height:28px}
-#status{font-weight:600;font-size:14px}
-#timer{font-size:22px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);display:none;letter-spacing:1px}
-.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--red);display:none;animation:pulse 1.2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.status-bar{display:flex;align-items:center;gap:20px;margin-bottom:14px;min-height:28px;background:var(--surface);border-radius:var(--radius-sm);padding:8px 16px;box-shadow:var(--shadow)}
+#status{font-weight:600;font-size:13px;letter-spacing:-.2px}
+#timer{font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent);display:none;letter-spacing:0;font-feature-settings:"tnum" 1}
+.rec-dot{width:8px;height:8px;border-radius:50%;background:var(--red);display:none;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(239,68,68,.6)}50%{opacity:.5;box-shadow:0 0 0 6px rgba(239,68,68,0)}}
 
 /* ── Mic toggle ── */
-.mic-toggle{
-  display:flex;flex-direction:column;gap:4px
-}
-.mic-toggle label{font-size:11px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.mic-toggle{display:flex;flex-direction:column;gap:5px}
+.mic-toggle label{font-size:10px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.6px}
 .mic-pill{
-  display:flex;align-items:center;gap:8px;background:var(--surface2);
-  border:1px solid #333;border-radius:8px;padding:5px 12px;cursor:pointer;
-  user-select:none;transition:border-color .15s
+  display:flex;align-items:center;gap:10px;background:var(--surface);
+  border:1.5px solid rgba(255,255,255,.06);border-radius:var(--radius-sm);padding:6px 14px;
+  cursor:pointer;user-select:none;transition:all var(--transition);box-shadow:var(--shadow)
 }
-.mic-pill.on {border-color:var(--green)}
-.mic-pill.off{border-color:var(--red)}
+.mic-pill:hover{border-color:rgba(255,255,255,.12)}
+.mic-pill.on {border-color:rgba(34,197,94,.4);background:linear-gradient(135deg,var(--surface),rgba(34,197,94,.06))}
+.mic-pill.off{border-color:rgba(239,68,68,.4);background:linear-gradient(135deg,var(--surface),rgba(239,68,68,.06))}
 .mic-icon{font-size:15px;line-height:1}
-.mic-label{font-size:13px;font-weight:600;min-width:22px}
+.mic-label{font-size:12px;font-weight:600;min-width:24px}
 .mic-track{
-  width:34px;height:18px;border-radius:9px;background:#444;
-  position:relative;transition:background .2s;flex-shrink:0
+  width:36px;height:20px;border-radius:10px;background:#333;
+  position:relative;transition:background var(--transition);flex-shrink:0
 }
 .mic-pill.on  .mic-track{background:var(--green)}
 .mic-pill.off .mic-track{background:var(--red)}
 .mic-thumb{
-  width:12px;height:12px;border-radius:50%;background:#fff;
-  position:absolute;top:3px;left:3px;transition:left .2s
+  width:14px;height:14px;border-radius:50%;background:#fff;
+  position:absolute;top:3px;left:3px;transition:left var(--transition);
+  box-shadow:0 1px 4px rgba(0,0,0,.3)
 }
 .mic-pill.on .mic-thumb{left:19px}
 
 /* ── Audio meter ── */
-#meter-wrap{display:none;flex-direction:column;gap:2px}
-#meter-wrap span{font-size:10px;color:var(--sub);text-transform:uppercase;letter-spacing:.5px}
-#meter{width:120px;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden}
-#meter-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));border-radius:4px;transition:width .07s}
+#meter-wrap{display:none;flex-direction:column;gap:3px;margin-left:auto}
+#meter-wrap span{font-size:9px;color:var(--sub);text-transform:uppercase;letter-spacing:.6px}
+#meter{width:100px;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden}
+#meter-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--green),var(--yellow),var(--red));border-radius:3px;transition:width .07s}
 
 /* ── Countdown ── */
 #countdown{
-  position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;
-  align-items:center;justify-content:center;z-index:999;font-size:120px;
-  font-weight:900;color:#fff;text-shadow:0 4px 32px rgba(108,99,255,.8)
+  position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;
+  align-items:center;justify-content:center;z-index:999;font-size:130px;
+  font-weight:900;color:#fff;-webkit-text-stroke:2px rgba(124,115,255,.3);
+  text-shadow:0 0 60px rgba(124,115,255,.5),0 0 120px rgba(124,115,255,.2);
+  font-family:'Inter',sans-serif;backdrop-filter:blur(4px)
 }
 
 /* ── View area ── */
 #view{
-  width:100%;background:#000;display:none;border-radius:12px;
-  overflow:hidden;margin-top:4px;position:relative
+  width:100%;background:#000;display:none;border-radius:var(--radius);
+  overflow:hidden;margin-top:6px;position:relative;box-shadow:var(--shadow-lg)
 }
 #mainVideo{width:100%;display:block}
 #composite{width:100%;display:none}
 .view-label{
-  position:absolute;top:10px;left:12px;background:rgba(0,0,0,.55);
-  color:#fff;font-size:11px;padding:3px 8px;border-radius:20px;
-  backdrop-filter:blur(4px);pointer-events:none
+  position:absolute;top:12px;left:12px;background:rgba(0,0,0,.6);
+  color:#fff;font-size:10px;padding:4px 10px;border-radius:20px;
+  backdrop-filter:blur(8px);pointer-events:none;font-weight:600;letter-spacing:.3px;
+  text-transform:uppercase;border:1px solid rgba(255,255,255,.08)
 }
 
 /* ── Drawing toolbar (laser/annotate) ── */
 #draw-bar{
-  position:absolute;top:10px;right:12px;display:none;
+  position:absolute;top:12px;right:12px;display:none;
   flex-direction:column;gap:6px;z-index:10
 }
 .draw-btn{
-  width:34px;height:34px;border-radius:50%;border:none;cursor:pointer;
-  font-size:16px;background:rgba(20,20,30,.75);color:#fff;
-  backdrop-filter:blur(4px);transition:background .15s
+  width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
+  font-size:16px;background:rgba(15,17,23,.8);color:#fff;
+  backdrop-filter:blur(8px);transition:all var(--transition);
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(255,255,255,.06);box-shadow:0 2px 8px rgba(0,0,0,.3)
 }
-.draw-btn.active{background:var(--accent)}
-.color-dot{width:18px;height:18px;border-radius:50%;border:2px solid #fff;cursor:pointer;margin:0 auto}
+.draw-btn:hover{background:rgba(28,31,46,.9);transform:scale(1.08)}
+.draw-btn.active{background:var(--accent);border-color:var(--accent);box-shadow:0 0 16px rgba(124,115,255,.4)}
+.color-dot{width:20px;height:20px;border-radius:50%;border:2px solid rgba(255,255,255,.8);cursor:pointer;margin:2px auto 0;transition:transform var(--transition)}
+.color-dot:hover{transform:scale(1.15)}
 
 /* ── Preview modal ── */
 #preview-modal{
   position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;
-  align-items:center;justify-content:center;z-index:1000;padding:20px
+  align-items:center;justify-content:center;z-index:1000;padding:20px;
+  backdrop-filter:blur(8px)
 }
 #preview-modal .modal-box{
-  background:var(--surface);border-radius:16px;padding:20px;
-  max-width:860px;width:100%
+  background:var(--surface);border-radius:var(--radius-lg);padding:24px;
+  max-width:860px;width:100%;box-shadow:var(--shadow-lg);
+  border:1px solid rgba(255,255,255,.04);animation:modalIn .25s ease
 }
-#preview-modal video{width:100%;border-radius:10px;max-height:60vh}
-.modal-meta{font-size:12px;color:var(--sub);margin-top:10px;display:flex;align-items:center;gap:10px}
-.fmt-badge{background:var(--surface2);border:1px solid #333;border-radius:5px;padding:2px 8px;font-weight:600;font-size:11px;letter-spacing:.5px}
-.fmt-badge.mp4{border-color:var(--green);color:var(--green)}
-.fmt-badge.webm{border-color:var(--accent);color:var(--accent)}
-.modal-actions{display:flex;gap:8px;margin-top:12px;justify-content:flex-end;flex-wrap:wrap}
-#mp4Unavail{font-size:11px;color:var(--sub);margin-top:6px;text-align:right;display:none}
+@keyframes modalIn{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+#preview-modal video{width:100%;border-radius:var(--radius-sm);max-height:60vh;background:#000}
+.modal-meta{font-size:12px;color:var(--sub);margin-top:12px;display:flex;align-items:center;gap:12px}
+.fmt-badge{
+  background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);
+  border-radius:5px;padding:3px 10px;font-weight:600;font-size:10px;letter-spacing:.6px;text-transform:uppercase
+}
+.fmt-badge.mp4{border-color:rgba(34,197,94,.4);color:var(--green)}
+.fmt-badge.webm{border-color:rgba(124,115,255,.4);color:var(--accent)}
+.modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap}
+#mp4Unavail{font-size:11px;color:var(--sub);margin-top:8px;text-align:right;display:none}
 
 /* ── Hotkey hint ── */
-.keys{font-size:11px;color:var(--sub);margin-top:8px}
+.keys{font-size:11px;color:var(--sub);margin-top:10px}
 .keys kbd{
-  background:var(--surface2);border:1px solid #444;border-radius:4px;
-  padding:1px 5px;font-family:monospace;font-size:11px
+  background:var(--surface);border:1px solid rgba(255,255,255,.06);border-radius:5px;
+  padding:2px 7px;font-family:'Inter',monospace;font-size:10px;font-weight:600
 }
 </style>
 </head>
 <body>
 
-<h1>⬤ Screen Recorder Pro</h1>
+<h1><span>⬤ Screen Recorder Pro</span></h1>
 <p class="subtitle">Record screen · camera · voice — one file, no upload, no limits</p>
 
 <!-- Mode selector -->
@@ -277,7 +358,7 @@ select:focus{border-color:var(--accent)}
 <!-- Preview-before-download modal -->
 <div id="preview-modal">
   <div class="modal-box">
-    <h3 style="margin-bottom:10px">Preview recording</h3>
+    <h3 style="margin-bottom:14px;font-size:17px;font-weight:700;letter-spacing:-.3px">Preview recording</h3>
     <video id="previewVid" controls></video>
     <div class="modal-meta">
       <span id="fmtWebm" class="fmt-badge webm">WebM</span>
@@ -339,7 +420,7 @@ let recMp4   = null, chunksMp4  = [];   // recorded only if MP4 supported
 let blobWebm = null, blobMp4    = null;
 let stopCount= 0;
 let screenStream= null, camStream = null, audioCtx = null;
-let drawVid     = null, vfcId    = null;
+let drawVid     = null, camVid    = null, drawRaf = null;
 let timerIntvl  = null, elapsedSec= 0;
 let meterRaf    = null, analyser  = null;
 
@@ -433,8 +514,9 @@ async function makeOffscreenVideo(stream){
   return v;
 }
 
-function mixAudio(...streams){
+async function mixAudio(...streams){
   audioCtx = new AudioContext();
+  if (audioCtx.state === 'suspended') await audioCtx.resume();
   const dest = audioCtx.createMediaStreamDestination();
 
   // Analyser for audio meter — NOT connected to destination (no speaker playback)
@@ -470,7 +552,7 @@ function stopMeter(){
   meterBar.style.width = '0%';
 }
 
-// ── Canvas draw loop (requestVideoFrameCallback — background-tab safe) ─
+// ── Canvas draw loop ─
 function camRect(cw, ch){
   const pct = parseInt($('camSizeRange').value) / 100;
   const w = Math.round(composite.width * pct);
@@ -511,15 +593,31 @@ function drawCamOverlay(camVid){
   ctx.stroke();
 }
 
-function startDraw(screenVid, camVid){
-  drawVid = screenVid;
-  const frame = () => {
-    ctx.drawImage(screenVid, 0, 0, composite.width, composite.height);
-    drawCamOverlay(camVid);
-    vfcId = screenVid.requestVideoFrameCallback(frame);
-  };
-  ctx.drawImage(screenVid, 0, 0, composite.width, composite.height);
-  vfcId = screenVid.requestVideoFrameCallback(frame);
+function startDraw(sVid, cVid){
+  drawVid = sVid;
+  camVid = cVid;
+  let running = true;
+
+  function frame(){
+    if (!running) return;
+    try {
+      ctx.drawImage(drawVid, 0, 0, composite.width, composite.height);
+      drawCamOverlay(camVid);
+    } catch(_) {}
+    drawRaf = requestAnimationFrame(frame);
+  }
+
+  drawRaf = requestAnimationFrame(frame);
+  return () => { running = false; };
+}
+
+function stopDraw(){
+  if (drawRaf != null) {
+    cancelAnimationFrame(drawRaf);
+    drawRaf = null;
+  }
+  drawVid = null;
+  camVid = null;
 }
 
 // ── Screenshot ────────────────────────────────────────────────────────
@@ -618,7 +716,7 @@ async function start(){
   blobWebm = null; blobMp4 = null; stopCount = 0;
   recWebm = null; recMp4 = null;
   screenStream = camStream = audioCtx = null;
-  drawVid = null; vfcId = null;
+  drawVid = null; camVid = null; drawRaf = null;
 
   try{
     let videoTrack, audioTrack;
@@ -631,7 +729,7 @@ async function start(){
       let mic = null;
       if(micOn){ try{ mic = await navigator.mediaDevices.getUserMedia({audio:true,video:false}); }catch(_){} }
       videoTrack = screenStream.getVideoTracks()[0];
-      audioTrack = mic ? mixAudio(mic) : null;
+      audioTrack = mic ? await mixAudio(mic) : null;
       mainVideo.srcObject = screenStream;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
@@ -643,7 +741,7 @@ async function start(){
       setStatus('Waiting for camera…');
       camStream = await navigator.mediaDevices.getUserMedia({video:true, audio:micOn});
       videoTrack = camStream.getVideoTracks()[0];
-      audioTrack = micOn ? mixAudio(camStream) : null;
+      audioTrack = micOn ? await mixAudio(camStream) : null;
       mainVideo.srcObject = camStream;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
@@ -676,8 +774,11 @@ async function start(){
 
       const canvasStream = composite.captureStream(30);
       videoTrack = canvasStream.getVideoTracks()[0];
-      audioTrack = micOn ? mixAudio(camStream) : null;
+      if(!videoTrack) throw new Error('Canvas capture failed — no video track');
+      audioTrack = micOn ? await mixAudio(camStream) : null;
     }
+
+    if(!videoTrack) throw new Error('No video track available for recording');
 
     const recStream = new MediaStream([videoTrack, audioTrack].filter(Boolean));
 
@@ -692,12 +793,14 @@ async function start(){
     });
     recWebm.ondataavailable = e => { if(e.data?.size > 0) chunksWebm.push(e.data); };
     recWebm.onstop = handleStop;
+    recWebm.onerror = () => { setStatus('WebM recording failed'); cleanup(); };
     recWebm.start(100);
 
     if(MP4_MIME){
       recMp4 = new MediaRecorder(recStream, { mimeType: MP4_MIME, videoBitsPerSecond: bitrate });
       recMp4.ondataavailable = e => { if(e.data?.size > 0) chunksMp4.push(e.data); };
       recMp4.onstop = handleStop;
+      recMp4.onerror = () => { setStatus('MP4 recording failed'); cleanup(); };
       recMp4.start(100);
     }
 
@@ -770,8 +873,7 @@ function onStop(){
 }
 
 function cleanup(resetUI = true){
-  if(vfcId !== null && drawVid){ drawVid.cancelVideoFrameCallback(vfcId); }
-  vfcId = null; drawVid = null;
+  stopDraw();
   stopTimer(); stopMeter();
   if(audioCtx){ audioCtx.close(); audioCtx = null; }
   [screenStream, camStream].forEach(s => s?.getTracks().forEach(t=>t.stop()));
@@ -849,9 +951,9 @@ screenshotBtn.addEventListener('click',  takeScreenshot);
 
 document.addEventListener('keydown', e => {
   if(e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-  if(e.code === 'Space' && !startBtn.disabled){
+  if(e.code === 'Space' && recWebm && !stopBtn.disabled){
     e.preventDefault();
-    recWebm?.state === 'paused' ? resume() : pause();
+    recWebm.state === 'paused' ? resume() : pause();
   }
   if(e.code === 'Escape' && !stopBtn.disabled) stop();
   if(e.code === 'KeyS'   && !screenshotBtn.disabled) takeScreenshot();
