@@ -37,7 +37,7 @@ h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-
 .mode-card{
   flex:1;min-width:130px;padding:16px 18px;border-radius:var(--radius);
   background:var(--surface);border:1.5px solid transparent;cursor:pointer;
-  transition:all var(--transition);user-select:none;
+  transition:all var(--transition);-webkit-user-select:none;user-select:none;
   box-shadow:var(--shadow);position:relative;overflow:hidden
 }
 .mode-card::before{
@@ -60,7 +60,7 @@ select{
   background:var(--surface);border:1.5px solid rgba(255,255,255,.06);color:var(--text);
   padding:7px 12px;border-radius:var(--radius-sm);font-size:13px;outline:none;cursor:pointer;
   transition:border-color var(--transition);font-family:inherit;font-weight:500;
-  min-width:100px;appearance:none;-webkit-appearance:none;
+  min-width:100px;-webkit-appearance:none;appearance:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%237f85a3' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 10px center;padding-right:32px
 }
@@ -142,7 +142,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .mic-pill{
   display:flex;align-items:center;gap:10px;background:var(--surface);
   border:1.5px solid rgba(255,255,255,.06);border-radius:var(--radius-sm);padding:6px 14px;
-  cursor:pointer;user-select:none;transition:all var(--transition);box-shadow:var(--shadow)
+  cursor:pointer;-webkit-user-select:none;user-select:none;transition:all var(--transition);box-shadow:var(--shadow)
 }
 .mic-pill:hover{border-color:rgba(255,255,255,.12)}
 .mic-pill.on {border-color:rgba(34,197,94,.4);background:linear-gradient(135deg,var(--surface),rgba(34,197,94,.06))}
@@ -174,7 +174,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   align-items:center;justify-content:center;z-index:999;font-size:130px;
   font-weight:900;color:#fff;-webkit-text-stroke:2px rgba(124,115,255,.3);
   text-shadow:0 0 60px rgba(124,115,255,.5),0 0 120px rgba(124,115,255,.2);
-  font-family:'Inter',sans-serif;backdrop-filter:blur(4px)
+  font-family:'Inter',sans-serif;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)
 }
 
 /* ── View area ── */
@@ -187,7 +187,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .view-label{
   position:absolute;top:12px;left:12px;background:rgba(0,0,0,.6);
   color:#fff;font-size:10px;padding:4px 10px;border-radius:20px;
-  backdrop-filter:blur(8px);pointer-events:none;font-weight:600;letter-spacing:.3px;
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);pointer-events:none;font-weight:600;letter-spacing:.3px;
   text-transform:uppercase;border:1px solid rgba(255,255,255,.08)
 }
 
@@ -199,7 +199,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .draw-btn{
   width:36px;height:36px;border-radius:50%;border:none;cursor:pointer;
   font-size:16px;background:rgba(15,17,23,.8);color:#fff;
-  backdrop-filter:blur(8px);transition:all var(--transition);
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:all var(--transition);
   display:flex;align-items:center;justify-content:center;
   border:1px solid rgba(255,255,255,.06);box-shadow:0 2px 8px rgba(0,0,0,.3)
 }
@@ -212,7 +212,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 #preview-modal{
   position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;
   align-items:center;justify-content:center;z-index:1000;padding:20px;
-  backdrop-filter:blur(8px)
+  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)
 }
 #preview-modal .modal-box{
   background:var(--surface);border-radius:var(--radius-lg);padding:24px;
@@ -270,7 +270,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 <div class="options">
   <div class="opt-group" id="opt-quality">
     <label>Quality</label>
-    <select id="qualitySelect">
+    <select id="qualitySelect" title="Quality Preset">
       <option value="8000000">Ultra (8 Mbps)</option>
       <option value="4000000" selected>High (4 Mbps)</option>
       <option value="2000000">Medium (2 Mbps)</option>
@@ -279,7 +279,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   </div>
   <div class="opt-group" id="opt-campos" style="display:none">
     <label>Cam position</label>
-    <select id="camPosSelect">
+    <select id="camPosSelect" title="Camera Position">
       <option value="br" selected>Bottom right</option>
       <option value="bl">Bottom left</option>
       <option value="tr">Top right</option>
@@ -288,7 +288,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   </div>
   <div class="opt-group" id="opt-camshape" style="display:none">
     <label>Cam shape</label>
-    <select id="camShapeSelect">
+    <select id="camShapeSelect" title="Camera Shape">
       <option value="round" selected>Circle</option>
       <option value="rect">Rectangle</option>
     </select>

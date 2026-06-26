@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>Screen Recorder</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -20,7 +21,7 @@ h1 .dot{width:10px;height:10px;border-radius:50%;background:var(--red);display:n
 
 /* mode cards */
 .modes{display:flex;gap:8px;margin-bottom:14px}
-.mode-card{flex:1;padding:10px 8px;border-radius:10px;background:var(--surface);border:2px solid transparent;cursor:pointer;text-align:center;user-select:none;transition:border .15s,background .15s}
+.mode-card{flex:1;padding:10px 8px;border-radius:10px;background:var(--surface);border:2px solid transparent;cursor:pointer;text-align:center;-webkit-user-select:none;user-select:none;transition:border .15s,background .15s}
 .mode-card:hover{background:var(--surface2)}
 .mode-card.active{border-color:var(--accent);background:var(--surface2)}
 .mode-card input{display:none}
@@ -68,7 +69,7 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
 
 /* draw bar */
 #dbar{position:absolute;top:8px;right:8px;display:none;flex-direction:column;gap:5px;z-index:10}
-.db{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;font-size:14px;background:rgba(20,20,30,.75);color:#fff;backdrop-filter:blur(4px)}
+.db{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;font-size:14px;background:rgba(20,20,30,.75);color:#fff;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .db.on{background:var(--accent)}
 #cpick{width:16px;height:16px;border-radius:50%;border:2px solid #fff;cursor:pointer;margin:0 auto}
 
@@ -106,7 +107,7 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
 <div class="opts">
   <div class="opt">
     <label>Quality</label>
-    <select id="q">
+    <select id="q" title="Quality Preset">
       <option value="8000000">Ultra 8Mbps</option>
       <option value="4000000" selected>High 4Mbps</option>
       <option value="2000000">Med 2Mbps</option>
@@ -115,7 +116,7 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
   </div>
   <div class="opt" id="opos" style="display:none">
     <label>Cam pos</label>
-    <select id="pos">
+    <select id="pos" title="Camera Position">
       <option value="br" selected>Bottom-right</option>
       <option value="bl">Bottom-left</option>
       <option value="tr">Top-right</option>
@@ -124,7 +125,7 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
   </div>
   <div class="opt" id="oshp" style="display:none">
     <label>Cam shape</label>
-    <select id="shp">
+    <select id="shp" title="Camera Shape">
       <option value="round" selected>Circle</option>
       <option value="rect">Rectangle</option>
     </select>
