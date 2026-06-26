@@ -111,6 +111,13 @@ body{
 }
 .sys-audio-badge.visible{display:flex}
 
+.mic-badge{
+  display:none;align-items:center;gap:5px;
+  background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.3);
+  border-radius:20px;padding:4px 10px;font-size:11px;font-weight:700;color:var(--yellow);
+}
+.mic-badge.visible{display:flex}
+
 /* ── Theme toggle ── */
 .theme-btn{
   width:36px;height:36px;border-radius:50%;border:1px solid var(--border2);
@@ -508,6 +515,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   <div class="header-badges">
     <div class="rec-badge" id="recBadge"><div class="rec-dot-live"></div> REC</div>
     <div class="sys-audio-badge" id="sysAudioBadge">🔊 Sys Audio</div>
+    <div class="mic-badge" id="micBadge">🎤 Mic</div>
   </div>
   <button class="theme-btn" id="themeBtn" title="Toggle light/dark theme">🌙</button>
 </header>
@@ -610,7 +618,18 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
               <span class="toggle-slider"></span>
             </label>
           </div>
-          <div class="fn-hint fn-hint--spaced">Records apps, videos, games &amp; system sounds. <strong>No microphone.</strong></div>
+          <div class="fn-hint fn-hint--spaced">Records apps, videos, games &amp; system sounds from your device.</div>
+        </div>
+        <!-- Microphone toggle -->
+        <div class="field" id="micField">
+          <div class="toggle-row">
+            <span class="toggle-label" title="Record from your microphone">Microphone <span class="field-sub">(voice)</span></span>
+            <label class="toggle">
+              <input type="checkbox" id="micToggle" title="Enable microphone" aria-label="Enable microphone"/>
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          <div class="fn-hint fn-hint--spaced">Capture voice from your microphone alongside system audio.</div>
         </div>
         <div class="field">
           <label class="field-label" for="gainRange">Volume</label>
@@ -766,10 +785,12 @@ const previewModal  = $('preview-modal'),previewVid = $('previewVid');
 const dlWebmBtn     = $('dlWebmBtn'),   dlMp4Btn   = $('dlMp4Btn');
 const discardBtn    = $('discardBtn');
 const recBadge      = $('recBadge'),    sysAudioBadge = $('sysAudioBadge');
+const micBadge      = $('micBadge');
 const colorDot      = $('colorPick'),   colorInput  = $('colorInput');
 const gainRange      = $('gainRange'),    gainVal     = $('gainVal');
 const camSizeRange   = $('camSizeRange'), camSizeVal  = $('camSizeVal');
 const sysAudioToggle = $('sysAudioToggle');
+const micToggle      = $('micToggle');
 const saveFilename  = $('saveFilename');
 const filenameTemplate=$('filenameTemplate');
 const historyHead   = $('historyHead'), historyBody = $('historyBody');
@@ -813,7 +834,11 @@ camSizeRange.addEventListener('input', () => {
 
 // ── System audio badge & field visibility ─────────────────────────────────────
 function updateSysAudioBadge(on){ sysAudioBadge.classList.toggle('visible', on); }
+function updateMicBadge(on){ micBadge.classList.toggle('visible', on); }
 sysAudioToggle.addEventListener('change', () => {
+  if(isRecording) return; // don't change mid-recording
+});
+micToggle.addEventListener('change', () => {
   if(isRecording) return; // don't change mid-recording
 });
 // Show/hide system-audio field: camera-only mode has no screen share to capture from
@@ -828,20 +853,22 @@ const INSTRS = {
     1. Click <b>▶ Start</b> → screen share dialog opens<br>
     2. Pick the tab or window you want to record<br>
     3. System audio is captured automatically (WASAPI loopback)<br>
-    4. Click <b>Share</b> → 3-second countdown → recording starts<br>
-    5. Return here → <b>⏹ Stop</b> → preview → download`,
+    4. Enable <b>Microphone</b> in Audio settings to add voice commentary<br>
+    5. Click <b>Share</b> → 3-second countdown → recording starts<br>
+    6. Return here → <b>⏹ Stop</b> → preview → download`,
   camera:`<b>Camera only:</b><br>
     1. Click <b>▶ Start</b> → allow camera access<br>
     2. 3-second countdown → recording begins<br>
     3. Click <b>⏹ Stop</b> when done → preview → download<br>
-    <span class="warn">⚠ Camera mode records video only — no audio source available</span>`,
+    <span class="warn">Enable <b>Microphone</b> in Audio settings to capture voice alongside your camera</span>`,
   both:`<b>Screen + Camera:</b><br>
     1. Click <b>▶ Start</b> → share dialog opens<br>
     2. Choose a <b>different</b> tab or window to record<br>
     <span class="warn">⚠ Don't pick this recorder tab — it creates a mirror loop</span><br>
     3. Click <b>Share</b> → allow camera → 3-second countdown<br>
     4. System audio is captured automatically alongside the camera overlay<br>
-    5. Return → <b>⏹ Stop</b> → preview → download one combined video`
+    5. Enable <b>Microphone</b> in Audio settings to add voice commentary<br>
+    6. Return → <b>⏹ Stop</b> → preview → download one combined video`
 };
 
 function getMode(){ return document.querySelector('input[name="mode"]:checked').value; }
@@ -878,7 +905,7 @@ let recMp4  = null, chunksMp4  = [];
 let blobWebm= null, blobMp4    = null;
 let stopCount = 0;
 let screenStream = null, camStream = null;
-let sysAudioStream = null;
+let sysAudioStream = null, micStream = null;
 let audioCtx = null, gainNode = null, analyser = null;
 let drawVid = null, camVid = null, drawInterval = null;
 let timerIntvl = null, elapsedSec = 0;
@@ -1045,19 +1072,31 @@ async function makeOffscreenVideo(stream){
   return v;
 }
 
-// ── System audio capture via WASAPI loopback ──────────────────────────────────
-// KEY FIX: createMediaStreamSource must receive an audio-ONLY stream.
-// Passing the full display-media stream (video+audio) causes WebAudio
-// to silently ignore it in Chromium/Electron, resulting in no recorded audio.
-async function setupSystemAudio(stream){
-  const audioTracks = stream?.getAudioTracks() ?? [];
-  if(!audioTracks.length){
-    setStatus('⚠ No system audio track captured — recording video only');
-    return null;
+// ── Audio mixer: system audio (WASAPI) + microphone ──────────────────────────
+// Routes all audio sources through WebAudio for gain control, analysis, and mixing.
+// KEY: createMediaStreamSource must receive audio-ONLY streams — WebAudio silently
+// ignores mixed video+audio streams in Chromium/Electron.
+async function setupAudioMixer(sysStream, enableMic){
+  const sysTracks = sysStream?.getAudioTracks() ?? [];
+  const sysTrack  = sysTracks[0] || null;
+  let   micTrack  = null;
+
+  // Request microphone if enabled
+  if(enableMic){
+    try{
+      const ms = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      micStream = ms;
+      micTrack = ms.getAudioTracks()[0] || null;
+    }catch(err){
+      console.warn('[Mic] access denied:', err);
+      setStatus('⚠ Microphone access denied — recording without mic');
+    }
   }
 
-  // Use the raw track as a guaranteed fallback for MediaRecorder
-  const rawTrack = audioTracks[0];
+  if(!sysTrack && !micTrack){
+    if(enableMic) setStatus('⚠ No audio sources available');
+    return null;
+  }
 
   try{
     audioCtx = new AudioContext();
@@ -1069,19 +1108,30 @@ async function setupSystemAudio(stream){
     gainNode  = audioCtx.createGain();
     gainNode.gain.value = gainRange.value / 100;
 
-    // CRITICAL: audio-only stream — WebAudio cannot handle mixed video+audio streams
-    const audioOnly = new MediaStream([rawTrack]);
-    const src = audioCtx.createMediaStreamSource(audioOnly);
-    src.connect(gainNode);
-    gainNode.connect(analyser);
-    gainNode.connect(dest);
+    // System audio source (WASAPI loopback from display stream)
+    if(sysTrack){
+      const sysOnly = new MediaStream([sysTrack]);
+      const sysSrc  = audioCtx.createMediaStreamSource(sysOnly);
+      sysSrc.connect(gainNode);
+      gainNode.connect(analyser);
+      gainNode.connect(dest);
+    }
 
-    // Return the processed track (gain-controlled); fall back to raw if empty
-    return dest.stream.getAudioTracks()[0] || rawTrack;
+    // Microphone source
+    if(micTrack){
+      const micOnly = new MediaStream([micTrack]);
+      const micSrc  = audioCtx.createMediaStreamSource(micOnly);
+      const micGain = audioCtx.createGain();
+      micGain.gain.value = 1.0;
+      micSrc.connect(micGain);
+      micGain.connect(analyser);
+      micGain.connect(dest);
+    }
+
+    return dest.stream.getAudioTracks()[0] || sysTrack || micTrack;
   }catch(err){
-    // If WebAudio fails for any reason, use the raw loopback track directly
-    console.warn('[AudioContext] failed, using raw loopback track:', err);
-    return rawTrack;
+    console.warn('[AudioContext] failed, using raw tracks:', err);
+    return sysTrack || micTrack;
   }
 }
 
@@ -1336,28 +1386,32 @@ async function start(){
         audio: wantSysAudio
       });
       videoTrack = screenStream.getVideoTracks()[0];
-      // Route system audio through gain + analyser so volume slider & meter work
-      audioTrack = wantSysAudio ? await setupSystemAudio(screenStream) : null;
-      mainVideo.srcObject = screenStream;
+      // Use video-only stream for preview — avoids audio-track conflicts with WebAudio
+      mainVideo.srcObject = new MediaStream([videoTrack]);
+      const wantMic = micToggle.checked;
+      audioTrack = (wantSysAudio || wantMic) ? await setupAudioMixer(screenStream, wantMic) : null;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
       viewLabel.textContent = 'Screen';
       viewEl.style.display = 'block';
       disableDrawing();
       if(wantSysAudio) updateSysAudioBadge(true);
+      if(wantMic) updateMicBadge(true);
 
     } else if(m === 'camera'){
-      // Camera-only: video only, no system audio available
+      // Camera-only: no system audio, but mic can be used
       setStatus('Waiting for camera…');
       camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       videoTrack = camStream.getVideoTracks()[0];
-      audioTrack = null; // no audio source in camera-only mode
+      const wantMic = micToggle.checked;
+      audioTrack = wantMic ? await setupAudioMixer(null, true) : null;
       mainVideo.srcObject = camStream;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
       viewLabel.textContent = 'Camera';
       viewEl.style.display = 'block';
       disableDrawing();
+      if(wantMic) updateMicBadge(true);
 
     } else {
       // Screen + Camera overlay
@@ -1385,9 +1439,11 @@ async function start(){
       const canvasStream = composite.captureStream(TARGET_FPS);
       videoTrack = canvasStream.getVideoTracks()[0];
       if(!videoTrack) throw new Error('Canvas capture failed — no video track');
-      // System audio comes from the screen share stream
-      audioTrack = wantSysAudio ? await setupSystemAudio(screenStream) : null;
+      // System audio comes from the screen share stream + optional mic
+      const wantMic = micToggle.checked;
+      audioTrack = (wantSysAudio || wantMic) ? await setupAudioMixer(screenStream, wantMic) : null;
       if(wantSysAudio) updateSysAudioBadge(true);
+      if(wantMic) updateMicBadge(true);
     }
 
     if(!videoTrack) throw new Error('No video track available');
@@ -1498,12 +1554,12 @@ function onStop(){
 }
 
 function cleanup(resetUI = true){
-  stopDraw(); stopTimer(); stopMeter(); updateSysAudioBadge(false);
+  stopDraw(); stopTimer(); stopMeter(); updateSysAudioBadge(false); updateMicBadge(false);
   recAudioTrack = null; isRecording = false;
   if(audioCtx){ audioCtx.close(); audioCtx = null; }
   gainNode = null; analyser = null;
-  [screenStream, camStream, sysAudioStream].forEach(s => s?.getTracks().forEach(t => t.stop()));
-  screenStream = camStream = sysAudioStream = null;
+  [screenStream, camStream, sysAudioStream, micStream].forEach(s => s?.getTracks().forEach(t => t.stop()));
+  screenStream = camStream = sysAudioStream = micStream = null;
   mainVideo.srcObject = null;
   if(resetUI){
     viewEl.style.display = 'none';
