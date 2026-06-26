@@ -11,7 +11,7 @@
   },
   "build": {
     "appId": "com.arqamhussain.arqamrecorder",
-    "productName": "Arqam Recorder",
+    "productName": "Screen Recorder",
     "copyright": "Copyright © 2026 Arqam Hussain",
     "files": [
       "index.html",
@@ -43,10 +43,10 @@
       "installerHeaderIcon": "assets/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Arqam Recorder"
+      "shortcutName": "Screen Recorder"
     },
     "portable": {
-      "artifactName": "ArqamRecorder-portable.exe"
+      "artifactName": "Screen-Recorder-portable.exe"
     }
   },
   "devDependencies": {

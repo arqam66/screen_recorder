@@ -12,7 +12,7 @@ function createWindow() {
     height: 820,
     minWidth: 700,
     minHeight: 600,
-    title: 'Arqam Recorder',
+    title: 'Screen Recorder',
     icon: path.join(__dirname, 'assets', 'icon.ico'),
     webPreferences: {
       nodeIntegration: false,
