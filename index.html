@@ -1046,22 +1046,43 @@ async function makeOffscreenVideo(stream){
 }
 
 // ── System audio capture via WASAPI loopback ──────────────────────────────────
-// Connects the display-media stream's audio through a gain node and analyser
-// so the volume slider and audio meter work as expected.
+// KEY FIX: createMediaStreamSource must receive an audio-ONLY stream.
+// Passing the full display-media stream (video+audio) causes WebAudio
+// to silently ignore it in Chromium/Electron, resulting in no recorded audio.
 async function setupSystemAudio(stream){
-  if(!stream?.getAudioTracks().length) return null;
-  audioCtx = new AudioContext();
-  if(audioCtx.state === 'suspended') await audioCtx.resume();
-  const dest = audioCtx.createMediaStreamDestination();
-  analyser = audioCtx.createAnalyser();
-  analyser.fftSize = 256;
-  gainNode = audioCtx.createGain();
-  gainNode.gain.value = gainRange.value / 100;
-  const src = audioCtx.createMediaStreamSource(stream);
-  src.connect(gainNode);
-  gainNode.connect(analyser);
-  gainNode.connect(dest);
-  return dest.stream.getAudioTracks()[0] || null;
+  const audioTracks = stream?.getAudioTracks() ?? [];
+  if(!audioTracks.length){
+    setStatus('⚠ No system audio track captured — recording video only');
+    return null;
+  }
+
+  // Use the raw track as a guaranteed fallback for MediaRecorder
+  const rawTrack = audioTracks[0];
+
+  try{
+    audioCtx = new AudioContext();
+    if(audioCtx.state === 'suspended') await audioCtx.resume();
+
+    const dest = audioCtx.createMediaStreamDestination();
+    analyser  = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    gainNode  = audioCtx.createGain();
+    gainNode.gain.value = gainRange.value / 100;
+
+    // CRITICAL: audio-only stream — WebAudio cannot handle mixed video+audio streams
+    const audioOnly = new MediaStream([rawTrack]);
+    const src = audioCtx.createMediaStreamSource(audioOnly);
+    src.connect(gainNode);
+    gainNode.connect(analyser);
+    gainNode.connect(dest);
+
+    // Return the processed track (gain-controlled); fall back to raw if empty
+    return dest.stream.getAudioTracks()[0] || rawTrack;
+  }catch(err){
+    // If WebAudio fails for any reason, use the raw loopback track directly
+    console.warn('[AudioContext] failed, using raw loopback track:', err);
+    return rawTrack;
+  }
 }
 
 // ── Audio meter ───────────────────────────────────────────────────────────────

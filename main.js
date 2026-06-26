@@ -2,6 +2,8 @@ const { app, BrowserWindow, Menu, shell, desktopCapturer } = require('electron')
 const path = require('path');
 
 app.commandLine.appendSwitch('enable-features', 'WebRTC-H264WithOpenH264FFmpeg');
+// Required for WASAPI system-audio loopback capture on Windows 10/11
+app.commandLine.appendSwitch('enable-usermedia-screen-capturing');
 app.commandLine.appendSwitch('auto-accept-camera-and-microphone-capture');
 
 let win;
@@ -25,12 +27,12 @@ function createWindow() {
 
   // Grant all required media permissions automatically
   win.webContents.session.setPermissionCheckHandler((webContents, permission) => {
-    const allowed = ['media', 'display-capture', 'mediaKeySystem', 'microphone', 'camera'];
+    const allowed = ['media', 'display-capture', 'mediaKeySystem', 'microphone', 'camera', 'audioCapture'];
     return allowed.includes(permission);
   });
 
   win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
-    const allowed = ['media', 'display-capture', 'mediaKeySystem', 'geolocation', 'microphone', 'camera'];
+    const allowed = ['media', 'display-capture', 'mediaKeySystem', 'geolocation', 'microphone', 'camera', 'audioCapture'];
     callback(allowed.includes(permission));
   });
 
