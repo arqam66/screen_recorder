@@ -8,6 +8,5 @@ Thumbs.db
 
 # Node / Electron build artifacts
 node_modules/
-dist/
 out/
 *.log
