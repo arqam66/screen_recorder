@@ -8,33 +8,44 @@ let win;
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1100,
-    height: 820,
-    minWidth: 700,
-    minHeight: 600,
+    width: 1150,
+    height: 860,
+    minWidth: 720,
+    minHeight: 620,
     title: 'Screen Recorder',
     icon: path.join(__dirname, 'assets', 'icon.ico'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
-      // Required for getDisplayMedia to work in Electron
       webSecurity: true,
     },
-    backgroundColor: '#0f1117',
+    backgroundColor: '#080b12',
     show: false,
   });
 
-  // Grant screen capture + camera + microphone permissions automatically
+  // Grant all required media permissions automatically
+  win.webContents.session.setPermissionCheckHandler((webContents, permission) => {
+    const allowed = ['media', 'display-capture', 'mediaKeySystem', 'microphone', 'camera'];
+    return allowed.includes(permission);
+  });
+
   win.webContents.session.setPermissionRequestHandler((webContents, permission, callback) => {
     const allowed = ['media', 'display-capture', 'mediaKeySystem', 'geolocation', 'microphone', 'camera'];
     callback(allowed.includes(permission));
   });
 
+  // Handle getDisplayMedia — provide a real DesktopCapturerSource.
+  // 'audio: loopback' enables WASAPI system-audio loopback on Windows (Electron 28+).
+  // The renderer controls whether system audio is actually used via getUserMedia constraints.
   win.webContents.session.setDisplayMediaRequestHandler(async (request, callback) => {
-    // Must pass a real DesktopCapturerSource — 'screen' string is invalid in Electron 20+
     const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
     const primary = sources.find(s => /screen|display/i.test(s.name)) || sources[0];
-    if (primary) callback({ video: primary });
+    if (primary) {
+      // Pass 'loopback' for system audio on Windows; harmless on other platforms
+      callback({ video: primary, audio: 'loopback' });
+    } else {
+      callback({});
+    }
   });
 
   win.loadFile('index.html');
@@ -42,14 +53,14 @@ function createWindow() {
   // Show window once fully loaded (no white flash)
   win.once('ready-to-show', () => win.show());
 
-  // Open external links in default browser, not inside the app
+  // Open external links in the default browser
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: 'deny' };
   });
 }
 
-// Remove default menu bar (keeps the app clean)
+// Remove default menu bar
 Menu.setApplicationMenu(null);
 
 app.whenReady().then(createWindow);
