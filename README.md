@@ -1,9 +1,9 @@
-# Screen Recorder Pro
+# Arqam Recorder
 
 A **free screen recorder** with face cam overlay, voice recording, and instant local download.
 No server, no upload, no account — everything runs locally.
 
-**Live Demo → [salikahmed595.github.io/screen-recorder-pro](https://salikahmed595.github.io/screen-recorder-pro/)**
+**Live Demo → [arqamhussain.github.io/arqam-recorder](https://arqamhussain.github.io/arqam-recorder/)**
 
 ---
 
@@ -11,16 +11,16 @@ No server, no upload, no account — everything runs locally.
 
 | Platform | Link |
 |----------|------|
-| **Windows .exe** | [Latest Release →](https://github.com/salikahmed595/screen-recorder-pro/releases/latest) |
-| **Chrome Extension** | [Download folder →](https://github.com/salikahmed595/screen-recorder-pro/tree/master/chrome-extension) — then Load unpacked |
-| **Web App** | Open in Chrome: [salikahmed595.github.io/screen-recorder-pro](https://salikahmed595.github.io/screen-recorder-pro/) |
+| **Windows .exe** | [Latest Release →](https://github.com/arqamhussain/arqam-recorder/releases/latest) |
+| **Chrome Extension** | [Download folder →](https://github.com/arqamhussain/arqam-recorder/tree/master/chrome-extension) — then Load unpacked |
+| **Web App** | Open in Chrome: [arqamhussain.github.io/arqam-recorder](https://arqamhussain.github.io/arqam-recorder/) |
 
 ---
 
 ## Installing the Windows App
 
-1. Go to [Releases](https://github.com/salikahmed595/screen-recorder-pro/releases/latest)
-2. Download `Screen-Recorder-Pro-Setup.exe`
+1. Go to [Releases](https://github.com/arqamhussain/arqam-recorder/releases/latest)
+2. Download `Arqam-Recorder-Setup.exe`
 3. Run it
 
 > **"Windows protected your PC" warning?**
@@ -105,7 +105,7 @@ The extension opens a floating window that stays open when you switch tabs — r
 - `getDisplayMedia` — screen capture
 - `getUserMedia` — camera & microphone
 - `MediaRecorder` — video encoding to `.webm`
-- `HTMLCanvasElement` + `requestVideoFrameCallback` — compositing (background-tab safe)
+- `HTMLCanvasElement` + `requestAnimationFrame` — compositing
 - `AudioContext` — echo-free multi-source audio mixing
 - Electron — Windows desktop app
 - Chrome Extension Manifest V3 — browser extension
@@ -126,7 +126,7 @@ The extension opens a floating window that stays open when you switch tabs — r
 ## Project Structure
 
 ```
-screen-recorder-pro/
+arqam-recorder/
 ├── index.html              # Web app (single file)
 ├── main.js                 # Electron entry point
 ├── package.json            # Electron build config
@@ -150,4 +150,4 @@ MIT — free to use, modify, and distribute.
 
 ---
 
-Made by [salikahmed595](https://github.com/salikahmed595)
+Made by [arqamhussain](https://github.com/arqamhussain)

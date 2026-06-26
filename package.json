@@ -1,18 +1,18 @@
 {
-  "name": "screen-recorder-pro",
+  "name": "arqam-recorder",
   "version": "1.0.0",
   "description": "Free screen recorder with face cam overlay, voice, and instant download",
   "main": "main.js",
-  "author": "salikahmed595",
+  "author": "arqamhussain",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win"
   },
   "build": {
-    "appId": "com.salikahmed595.screenrecorderpro",
-    "productName": "Screen Recorder Pro",
-    "copyright": "Copyright © 2026 salikahmed595",
+    "appId": "com.arqamhussain.arqamrecorder",
+    "productName": "Arqam Recorder",
+    "copyright": "Copyright © 2026 arqamhussain",
     "files": [
       "index.html",
       "main.js",
@@ -43,10 +43,10 @@
       "installerHeaderIcon": "assets/icon.ico",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Screen Recorder Pro"
+      "shortcutName": "Arqam Recorder"
     },
     "portable": {
-      "artifactName": "ScreenRecorderPro-portable.exe"
+      "artifactName": "ArqamRecorder-portable.exe"
     }
   },
   "devDependencies": {
