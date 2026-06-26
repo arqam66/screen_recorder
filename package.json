@@ -1,9 +1,9 @@
 {
   "name": "screen-recorder",
-  "version": "1.0.3",
-  "description": "Screen recorder with face cam overlay, voice recording, annotation tools, and instant local download",
+  "version": "1.1.0",
+  "description": "Screen recorder with face cam overlay, system audio capture, annotation tools, and instant local download",
   "main": "main.js",
-  "author": "",
+  "author": "Arqam",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
