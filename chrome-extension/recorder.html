@@ -71,7 +71,10 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
 #dbar{position:absolute;top:8px;right:8px;display:none;flex-direction:column;gap:5px;z-index:10}
 .db{width:30px;height:30px;border-radius:50%;border:none;cursor:pointer;font-size:14px;background:rgba(20,20,30,.75);color:#fff;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px)}
 .db.on{background:var(--accent)}
-#cpick{width:16px;height:16px;border-radius:50%;border:2px solid #fff;cursor:pointer;margin:0 auto}
+#cpick{width:16px;height:16px;border-radius:50%;border:2px solid #fff;cursor:pointer;margin:0 auto;background:#ff6584}
+#opos,#oshp,#osz,#ci{display:none}
+#csz{width:80px}
+#pm h3{margin-bottom:10px;font-size:15px}
 
 /* keys */
 .keys{font-size:10px;color:var(--sub);margin-top:8px}
@@ -114,7 +117,7 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
       <option value="1000000">Low 1Mbps</option>
     </select>
   </div>
-  <div class="opt" id="opos" style="display:none">
+  <div class="opt" id="opos">
     <label>Cam pos</label>
     <select id="pos" title="Camera Position">
       <option value="br" selected>Bottom-right</option>
@@ -123,16 +126,16 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
       <option value="tl">Top-left</option>
     </select>
   </div>
-  <div class="opt" id="oshp" style="display:none">
+  <div class="opt" id="oshp">
     <label>Cam shape</label>
     <select id="shp" title="Camera Shape">
       <option value="round" selected>Circle</option>
       <option value="rect">Rectangle</option>
     </select>
   </div>
-  <div class="opt" id="osz" style="display:none">
+  <div class="opt" id="osz">
     <label>Cam size</label>
-    <input type="range" id="csz" min="10" max="35" value="22" style="width:80px"/>
+    <input type="range" id="csz" min="10" max="35" value="22"/>
   </div>
 </div>
 
@@ -162,14 +165,14 @@ select,input[type=range]{background:var(--surface2);border:1px solid #333;color:
   <div id="dbar">
     <button class="db" id="laserBtn" title="Laser">🔴</button>
     <button class="db" id="penBtn"   title="Draw">✏️</button>
-    <div id="cpick" style="background:#ff6584"></div>
-    <input type="color" id="ci" value="#ff6584" style="display:none"/>
+    <div id="cpick"></div>
+    <input type="color" id="ci" value="#ff6584"/>
   </div>
 </div>
 
 <div id="pm">
   <div class="box">
-    <h3 style="margin-bottom:10px;font-size:15px">Preview recording</h3>
+    <h3>Preview recording</h3>
     <video id="pvid" controls></video>
     <div class="ma">
       <button class="btn btn-g" id="discBtn">🗑 Discard</button>

@@ -230,6 +230,10 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .fmt-badge.webm{border-color:rgba(124,115,255,.4);color:var(--accent)}
 .modal-actions{display:flex;gap:10px;margin-top:16px;justify-content:flex-end;flex-wrap:wrap}
 #mp4Unavail{font-size:11px;color:var(--sub);margin-top:8px;text-align:right;display:none}
+#opt-campos,#opt-camshape,#opt-camsize,#colorInput,#fmtMp4{display:none}
+#camSizeRange{width:90px}
+#colorPick{background:#ff6584}
+#preview-modal h3{margin-bottom:14px;font-size:17px;font-weight:700;letter-spacing:-.3px}
 
 /* ── Hotkey hint ── */
 .keys{font-size:11px;color:var(--sub);margin-top:10px}
@@ -277,7 +281,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <option value="1000000">Low (1 Mbps)</option>
     </select>
   </div>
-  <div class="opt-group" id="opt-campos" style="display:none">
+  <div class="opt-group" id="opt-campos">
     <label>Cam position</label>
     <select id="camPosSelect" title="Camera Position">
       <option value="br" selected>Bottom right</option>
@@ -286,16 +290,16 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <option value="tl">Top left</option>
     </select>
   </div>
-  <div class="opt-group" id="opt-camshape" style="display:none">
+  <div class="opt-group" id="opt-camshape">
     <label>Cam shape</label>
     <select id="camShapeSelect" title="Camera Shape">
       <option value="round" selected>Circle</option>
       <option value="rect">Rectangle</option>
     </select>
   </div>
-  <div class="opt-group" id="opt-camsize" style="display:none">
+  <div class="opt-group" id="opt-camsize">
     <label>Cam size</label>
-    <input type="range" id="camSizeRange" min="10" max="35" value="22" style="width:90px"/>
+    <input type="range" id="camSizeRange" min="10" max="35" value="22"/>
   </div>
   <div class="mic-toggle">
     <label>Microphone</label>
@@ -350,19 +354,19 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <button class="draw-btn" id="laserBtn" title="Laser pointer">🔴</button>
     <button class="draw-btn" id="penBtn"   title="Draw">✏️</button>
     <button class="draw-btn" id="clearBtn" title="Clear">🗑️</button>
-    <div class="color-dot" id="colorPick" style="background:#ff6584" title="Color"></div>
-    <input type="color" id="colorInput" value="#ff6584" style="display:none"/>
+    <div class="color-dot" id="colorPick" title="Color"></div>
+    <input type="color" id="colorInput" value="#ff6584"/>
   </div>
 </div>
 
 <!-- Preview-before-download modal -->
 <div id="preview-modal">
   <div class="modal-box">
-    <h3 style="margin-bottom:14px;font-size:17px;font-weight:700;letter-spacing:-.3px">Preview recording</h3>
+    <h3>Preview recording</h3>
     <video id="previewVid" controls></video>
     <div class="modal-meta">
       <span id="fmtWebm" class="fmt-badge webm">WebM</span>
-      <span id="fmtMp4"  class="fmt-badge mp4"  style="display:none">MP4</span>
+      <span id="fmtMp4"  class="fmt-badge mp4">MP4</span>
       <span id="recSize"></span>
     </div>
     <div class="modal-actions">
