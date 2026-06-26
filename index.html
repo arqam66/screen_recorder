@@ -595,57 +595,27 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     <!-- AUDIO settings accordion -->
     <div class="accordion" id="accAudio">
       <div class="accordion-head open" onclick="toggleAccordion('accAudio')">
-        <span>🎙️</span>
+        <span>🔊</span>
         <span class="accordion-title">Audio</span>
         <span class="accordion-icon">▼</span>
       </div>
       <div class="accordion-body open">
-        <div class="field">
-          <label class="field-label" for="micToggle">Microphone</label>
-          <div class="toggle-row">
-            <span class="toggle-label">Enable mic</span>
-            <label class="toggle">
-              <input type="checkbox" id="micToggle" checked title="Enable microphone" aria-label="Enable microphone"/>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-        <div class="field" id="micDeviceField">
-          <label class="field-label" for="micDeviceSelect">Input device</label>
-          <select id="micDeviceSelect" title="Select microphone input device" aria-label="Microphone input device"></select>
-        </div>
-        <div class="field">
-          <label class="field-label" for="gainRange">Mic gain</label>
-          <div class="field-row">
-            <input type="range" id="gainRange" min="0" max="200" value="100" title="Microphone gain" aria-label="Microphone gain"/>
-            <span class="range-val" id="gainVal">100%</span>
-          </div>
-        </div>
-        <div class="field">
-          <div class="toggle-row">
-            <span class="toggle-label">Noise suppression</span>
-            <label class="toggle">
-              <input type="checkbox" id="noiseSuppToggle" checked title="Enable noise suppression" aria-label="Enable noise suppression"/>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-        <div class="field">
-          <div class="toggle-row">
-            <span class="toggle-label">Echo cancellation</span>
-            <label class="toggle">
-              <input type="checkbox" id="echoCancelToggle" checked title="Enable echo cancellation" aria-label="Enable echo cancellation"/>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
+        <!-- System audio capture — WASAPI loopback on Windows via Electron -->
         <div class="field" id="sysAudioField">
           <div class="toggle-row">
-            <span class="toggle-label" title="Captures desktop audio from screen share">System audio <span class="field-sub">(screen share)</span></span>
+            <span class="toggle-label" title="Captures all audio playing on the device via WASAPI loopback">System audio <span class="field-sub">(device output)</span></span>
             <label class="toggle">
-              <input type="checkbox" id="sysAudioToggle" title="Capture system audio" aria-label="Capture system audio"/>
+              <input type="checkbox" id="sysAudioToggle" checked title="Capture system audio" aria-label="Capture system audio"/>
               <span class="toggle-slider"></span>
             </label>
+          </div>
+          <div class="fn-hint" style="margin-top:6px">Records apps, videos, games &amp; system sounds. <strong>No microphone.</strong></div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="gainRange">Volume</label>
+          <div class="field-row">
+            <input type="range" id="gainRange" min="0" max="200" value="100" title="System audio volume" aria-label="System audio volume"/>
+            <span class="range-val" id="gainVal">100%</span>
           </div>
         </div>
       </div>
@@ -681,7 +651,6 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
         <div class="hotkey-row"><span class="hotkey-name">Pause / Resume</span><div class="hotkey-input" id="hk-pause" tabindex="0" data-action="pause"></div></div>
         <div class="hotkey-row"><span class="hotkey-name">Stop recording</span><div class="hotkey-input" id="hk-stop" tabindex="0" data-action="stop"></div></div>
         <div class="hotkey-row"><span class="hotkey-name">Screenshot</span><div class="hotkey-input" id="hk-screenshot" tabindex="0" data-action="screenshot"></div></div>
-        <div class="hotkey-row"><span class="hotkey-name">Mute / Unmute mic</span><div class="hotkey-input" id="hk-mute" tabindex="0" data-action="mute"></div></div>
         <button class="btn-reset-keys" id="resetHotkeysBtn">↺ Reset to defaults</button>
       </div>
     </div>
@@ -797,13 +766,9 @@ const dlWebmBtn     = $('dlWebmBtn'),   dlMp4Btn   = $('dlMp4Btn');
 const discardBtn    = $('discardBtn');
 const recBadge      = $('recBadge'),    sysAudioBadge = $('sysAudioBadge');
 const colorDot      = $('colorPick'),   colorInput  = $('colorInput');
-const gainRange     = $('gainRange'),   gainVal     = $('gainVal');
-const camSizeRange  = $('camSizeRange'),camSizeVal  = $('camSizeVal');
-const micToggle     = $('micToggle');
-const sysAudioToggle= $('sysAudioToggle');
-const noiseSuppToggle=$('noiseSuppToggle');
-const echoCancelToggle=$('echoCancelToggle');
-const micDeviceSelect=$('micDeviceSelect');
+const gainRange      = $('gainRange'),    gainVal     = $('gainVal');
+const camSizeRange   = $('camSizeRange'), camSizeVal  = $('camSizeVal');
+const sysAudioToggle = $('sysAudioToggle');
 const saveFilename  = $('saveFilename');
 const filenameTemplate=$('filenameTemplate');
 const historyHead   = $('historyHead'), historyBody = $('historyBody');
@@ -850,7 +815,7 @@ function updateSysAudioBadge(on){ sysAudioBadge.classList.toggle('visible', on);
 sysAudioToggle.addEventListener('change', () => {
   if(isRecording) return; // don't change mid-recording
 });
-// Hide sysAudio option for camera-only mode
+// Show/hide system-audio field: camera-only mode has no screen share to capture from
 function updateSysAudioVisibility(){
   const m = getMode();
   $('sysAudioField').style.display = m === 'camera' ? 'none' : '';
@@ -861,19 +826,20 @@ const INSTRS = {
   screen:`<b>Screen only:</b><br>
     1. Click <b>▶ Start</b> → screen share dialog opens<br>
     2. Pick the tab or window you want to record<br>
-    3. Enable <b>"Share system audio"</b> if you want desktop audio<br>
+    3. System audio is captured automatically (WASAPI loopback)<br>
     4. Click <b>Share</b> → 3-second countdown → recording starts<br>
     5. Return here → <b>⏹ Stop</b> → preview → download`,
   camera:`<b>Camera only:</b><br>
     1. Click <b>▶ Start</b> → allow camera access<br>
     2. 3-second countdown → recording begins<br>
-    3. Click <b>⏹ Stop</b> when done → preview → download`,
+    3. Click <b>⏹ Stop</b> when done → preview → download<br>
+    <span class="warn">⚠ Camera mode records video only — no audio source available</span>`,
   both:`<b>Screen + Camera:</b><br>
     1. Click <b>▶ Start</b> → share dialog opens<br>
     2. Choose a <b>different</b> tab or window to record<br>
     <span class="warn">⚠ Don't pick this recorder tab — it creates a mirror loop</span><br>
-    3. Click <b>Share</b> → allow camera & mic → 3-second countdown<br>
-    4. Switch to your tab and work — recorder runs in background<br>
+    3. Click <b>Share</b> → allow camera → 3-second countdown<br>
+    4. System audio is captured automatically alongside the camera overlay<br>
     5. Return → <b>⏹ Stop</b> → preview → download one combined video`
 };
 
@@ -896,28 +862,7 @@ document.querySelectorAll('.mode-card').forEach(card => {
 instrEl.innerHTML = INSTRS.screen;
 instrEl.style.display = 'block';
 
-// ── Mic device enumeration ────────────────────────────────────────────────────
-async function enumMicDevices(){
-  try{
-    await navigator.mediaDevices.getUserMedia({audio:true}).then(s=>s.getTracks().forEach(t=>t.stop()));
-    const devices = await navigator.mediaDevices.enumerateDevices();
-    const mics = devices.filter(d => d.kind === 'audioinput');
-    micDeviceSelect.innerHTML = mics.map((d,i) =>
-      `<option value="${d.deviceId}">${d.label || 'Microphone ' + (i+1)}</option>`
-    ).join('');
-  }catch(_){ micDeviceSelect.innerHTML = '<option value="">Default microphone</option>'; }
-}
-enumMicDevices();
-navigator.mediaDevices.addEventListener('devicechange', enumMicDevices);
-
-// Hide/show mic device field when mic is toggled
-micToggle.addEventListener('change', () => {
-  $('micDeviceField').style.display = micToggle.checked ? 'block' : 'none';
-  if(recAudioTrack) recAudioTrack.enabled = micToggle.checked;
-  if(gainNode){
-    gainNode.gain.value = micToggle.checked ? gainRange.value / 100 : 0;
-  }
-});
+// Microphone is disabled — this recorder captures system audio only (WASAPI loopback).
 
 // ── MP4 support detection ─────────────────────────────────────────────────────
 const MP4_MIME = [
@@ -955,8 +900,7 @@ const DEFAULT_HOTKEYS = {
   start:      'F9',
   pause:      'Space',
   stop:       'Escape',
-  screenshot: 'KeyS',
-  mute:       'KeyM'
+  screenshot: 'KeyS'
 };
 let hotkeys = JSON.parse(localStorage.getItem('sr-hotkeys') || 'null') || {...DEFAULT_HOTKEYS};
 
@@ -983,8 +927,7 @@ function renderKeyHints(){
   keyHints.innerHTML =
     `<kbd>${codeToLabel(hotkeys.pause)}</kbd> Pause/Resume &nbsp;` +
     `<kbd>${codeToLabel(hotkeys.stop)}</kbd> Stop &nbsp;` +
-    `<kbd>${codeToLabel(hotkeys.screenshot)}</kbd> Screenshot &nbsp;` +
-    `<kbd>${codeToLabel(hotkeys.mute)}</kbd> Mute`;
+    `<kbd>${codeToLabel(hotkeys.screenshot)}</kbd> Screenshot`;
 }
 renderHotkeys();
 
@@ -1101,24 +1044,21 @@ async function makeOffscreenVideo(stream){
   return v;
 }
 
-// ── Audio mixing with gain control ────────────────────────────────────────────
-async function mixAudio(...streams){
+// ── System audio capture via WASAPI loopback ──────────────────────────────────
+// Connects the display-media stream's audio through a gain node and analyser
+// so the volume slider and audio meter work as expected.
+async function setupSystemAudio(stream){
+  if(!stream?.getAudioTracks().length) return null;
   audioCtx = new AudioContext();
   if(audioCtx.state === 'suspended') await audioCtx.resume();
   const dest = audioCtx.createMediaStreamDestination();
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
-
   gainNode = audioCtx.createGain();
-  gainNode.gain.value = micToggle.checked ? gainRange.value / 100 : 0;
-
-  streams.forEach(s => {
-    if(s?.getAudioTracks().length){
-      const src = audioCtx.createMediaStreamSource(s);
-      src.connect(gainNode);
-      src.connect(analyser);
-    }
-  });
+  gainNode.gain.value = gainRange.value / 100;
+  const src = audioCtx.createMediaStreamSource(stream);
+  src.connect(gainNode);
+  gainNode.connect(analyser);
   gainNode.connect(dest);
   return dest.stream.getAudioTracks()[0] || null;
 }
@@ -1359,6 +1299,8 @@ async function start(){
   const m = getMode();
   currentMode = m;
   const bitrate = parseInt($('qualitySelect').value);
+  // System audio is always requested for screen/both modes via WASAPI loopback.
+  // Camera-only mode has no output device to capture from.
   const wantSysAudio = sysAudioToggle.checked && m !== 'camera';
 
   try{
@@ -1366,26 +1308,14 @@ async function start(){
 
     if(m === 'screen'){
       setStatus('Waiting for screen share…');
+      // audio:true → Electron's setDisplayMediaRequestHandler returns WASAPI loopback
       screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video:true,
+        video: true,
         audio: wantSysAudio
       });
-      let mic = null;
-      if(micToggle.checked){
-        try{
-          mic = await navigator.mediaDevices.getUserMedia({
-            audio:{
-              deviceId: micDeviceSelect.value || undefined,
-              noiseSuppression: noiseSuppToggle.checked,
-              echoCancellation: echoCancelToggle.checked
-            },
-            video:false
-          });
-        }catch(_){}
-      }
       videoTrack = screenStream.getVideoTracks()[0];
-      const mixSources = [mic, wantSysAudio ? screenStream : null].filter(Boolean);
-      audioTrack = mixSources.length ? await mixAudio(...mixSources) : null;
+      // Route system audio through gain + analyser so volume slider & meter work
+      audioTrack = wantSysAudio ? await setupSystemAudio(screenStream) : null;
       mainVideo.srcObject = screenStream;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
@@ -1395,17 +1325,11 @@ async function start(){
       if(wantSysAudio) updateSysAudioBadge(true);
 
     } else if(m === 'camera'){
+      // Camera-only: video only, no system audio available
       setStatus('Waiting for camera…');
-      camStream = await navigator.mediaDevices.getUserMedia({
-        video:true,
-        audio: micToggle.checked ? {
-          deviceId: micDeviceSelect.value || undefined,
-          noiseSuppression: noiseSuppToggle.checked,
-          echoCancellation: echoCancelToggle.checked
-        } : false
-      });
+      camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       videoTrack = camStream.getVideoTracks()[0];
-      audioTrack = micToggle.checked ? await mixAudio(camStream) : null;
+      audioTrack = null; // no audio source in camera-only mode
       mainVideo.srcObject = camStream;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
@@ -1414,27 +1338,19 @@ async function start(){
       disableDrawing();
 
     } else {
+      // Screen + Camera overlay
       setStatus('Step 1: Pick a screen / window to record…');
       screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video:true,
-        audio: wantSysAudio
+        video: true,
+        audio: wantSysAudio  // WASAPI loopback for system audio
       });
-      setStatus('Step 2: Allow camera & mic…');
-      camStream = await navigator.mediaDevices.getUserMedia({
-        video:true,
-        audio: micToggle.checked ? {
-          deviceId: micDeviceSelect.value || undefined,
-          noiseSuppression: noiseSuppToggle.checked,
-          echoCancellation: echoCancelToggle.checked
-        } : false
-      });
+      setStatus('Step 2: Allow camera…');
+      camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       setStatus('Building composite…');
       const [sv, cv] = await Promise.all([
         makeOffscreenVideo(screenStream),
         makeOffscreenVideo(camStream),
       ]);
-      // Use devicePixelRatio-corrected dimensions
-      const dpr = window.devicePixelRatio || 1;
       composite.width  = sv.videoWidth  || 1920;
       composite.height = sv.videoHeight || 1080;
       startDraw(sv, cv);
@@ -1447,8 +1363,8 @@ async function start(){
       const canvasStream = composite.captureStream(TARGET_FPS);
       videoTrack = canvasStream.getVideoTracks()[0];
       if(!videoTrack) throw new Error('Canvas capture failed — no video track');
-      const mixSources = [micToggle.checked ? camStream : null, wantSysAudio ? screenStream : null].filter(Boolean);
-      audioTrack = mixSources.length ? await mixAudio(...mixSources) : null;
+      // System audio comes from the screen share stream
+      audioTrack = wantSysAudio ? await setupSystemAudio(screenStream) : null;
       if(wantSysAudio) updateSysAudioBadge(true);
     }
 
@@ -1649,10 +1565,6 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); stop();
   } else if(e.code === hotkeys.screenshot && !screenshotBtn.disabled){
     e.preventDefault(); takeScreenshot();
-  } else if(e.code === hotkeys.mute){
-    e.preventDefault();
-    micToggle.checked = !micToggle.checked;
-    micToggle.dispatchEvent(new Event('change'));
   }
 });
 
