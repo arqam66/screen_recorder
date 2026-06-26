@@ -18,7 +18,7 @@
   --shadow-lg:0 8px 40px rgba(0,0,0,.5);
   --transition:.2s cubic-bezier(.4,0,.2,1);
 }
-html{scrollbar-color:var(--surface2) transparent;scrollbar-width:thin}
+
 ::-webkit-scrollbar{width:6px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--surface2);border-radius:3px}
@@ -347,7 +347,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 <!-- Live view -->
 <div id="view">
   <div class="view-label" id="viewLabel">Preview</div>
-  <video id="mainVideo" autoplay muted playsinline></video>
+  <video id="mainVideo" autoplay muted></video>
   <canvas id="composite"></canvas>
   <!-- Drawing/annotation toolbar -->
   <div id="draw-bar">
