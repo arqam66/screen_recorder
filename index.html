@@ -398,6 +398,7 @@ const colorDot     = $('colorPick'),   colorInput  = $('colorInput');
 
 // ── Mic toggle ────────────────────────────────────────────────────────
 let micOn = true;
+let recAudioTrack = null;
 $('micToggle').addEventListener('click', ()=>{
   micOn = !micOn;
   const el = $('micToggle');
@@ -405,6 +406,7 @@ $('micToggle').addEventListener('click', ()=>{
   el.classList.toggle('off', !micOn);
   $('micIcon').textContent  = micOn ? '🎙️' : '🔇';
   $('micLabel').textContent = micOn ? 'On' : 'Off';
+  if (recAudioTrack) recAudioTrack.enabled = micOn;
 });
 
 // ── MP4 native support detection ──────────────────────────────────────
@@ -779,6 +781,7 @@ async function start(){
     }
 
     if(!videoTrack) throw new Error('No video track available for recording');
+    recAudioTrack = audioTrack || null;
 
     const recStream = new MediaStream([videoTrack, audioTrack].filter(Boolean));
 
@@ -875,6 +878,7 @@ function onStop(){
 function cleanup(resetUI = true){
   stopDraw();
   stopTimer(); stopMeter();
+  recAudioTrack = null;
   if(audioCtx){ audioCtx.close(); audioCtx = null; }
   [screenStream, camStream].forEach(s => s?.getTracks().forEach(t=>t.stop()));
   screenStream = camStream = null;
