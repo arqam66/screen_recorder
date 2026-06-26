@@ -1,7 +1,7 @@
 {
   "name": "arqam-recorder",
   "version": "1.0.0",
-  "description": "Free screen recorder with face cam overlay, voice, and instant download",
+  "description": "Screen recorder with face cam overlay, voice recording, annotation tools, and instant local download",
   "main": "main.js",
   "author": "Arqam Hussain",
   "license": "MIT",
