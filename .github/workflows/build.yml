@@ -34,16 +34,16 @@ jobs:
       - name: Create GitHub Release and upload .exe files
         uses: softprops/action-gh-release@v2
         with:
-          name: "Arqam Recorder ${{ github.ref_name }}"
+          name: "Screen Recorder ${{ github.ref_name }}"
           body: |
-            ## 🎬 Arqam Recorder ${{ github.ref_name }}
+            ## 🎬 Screen Recorder ${{ github.ref_name }}
 
             ### ⬇️ Download
 
             | File | What it does |
             |------|-------------|
-            | `Arqam-Recorder-Setup-*.exe` | **Installer** — installs with Desktop & Start Menu shortcut, uninstallable |
-            | `ArqamRecorder-portable.exe` | **Portable** — double-click and run, no install needed |
+            | `Screen Recorder Setup *.exe` | **Installer** — installs with Desktop & Start Menu shortcut, uninstallable |
+            | `Screen-Recorder-portable.exe` | **Portable** — double-click and run, no install needed |
 
             ### ✨ Features
             - 🖥️ Screen recording (any Chrome tab or window)

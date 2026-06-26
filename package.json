@@ -1,18 +1,18 @@
 {
-  "name": "arqam-recorder",
+  "name": "screen-recorder",
   "version": "1.0.3",
   "description": "Screen recorder with face cam overlay, voice recording, annotation tools, and instant local download",
   "main": "main.js",
-  "author": "Arqam Hussain",
+  "author": "",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --win"
   },
   "build": {
-    "appId": "com.arqamhussain.arqamrecorder",
+    "appId": "com.screenrecorder",
     "productName": "Screen Recorder",
-    "copyright": "Copyright © 2026 Arqam Hussain",
+    "copyright": "Copyright © 2026",
     "files": [
       "index.html",
       "main.js",

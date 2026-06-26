@@ -1,4 +1,4 @@
-# Arqam Recorder
+# Screen Recorder
 
 A browser-based screen recorder with face cam overlay, voice recording, and instant local download. No server, no upload, no account — everything runs locally.
 
@@ -73,7 +73,7 @@ A browser-based screen recorder with face cam overlay, voice recording, and inst
 ## Project Structure
 
 ```
-arqam-recorder/
+screen-recorder/
 ├── index.html                          # Main application (single HTML file)
 ├── main.js                             # Electron main process
 ├── package.json                        # Dependencies and build configuration
