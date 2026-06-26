@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Free screen recorder with face cam overlay, voice, and instant download",
   "main": "main.js",
-  "author": "arqamhussain",
+  "author": "Arqam Hussain",
   "license": "MIT",
   "scripts": {
     "start": "electron .",
@@ -12,7 +12,7 @@
   "build": {
     "appId": "com.arqamhussain.arqamrecorder",
     "productName": "Arqam Recorder",
-    "copyright": "Copyright © 2026 arqamhussain",
+    "copyright": "Copyright © 2026 Arqam Hussain",
     "files": [
       "index.html",
       "main.js",
