@@ -1201,18 +1201,19 @@ async function setupAudioMixer(sysStream, enableMic, existingMicStream = null){
         micTrack = ms.getAudioTracks()[0] || null;
       }catch(err){
         console.warn('[Mic] access denied:', err);
-        setStatus('⚠ Microphone access denied — recording without mic');
+        setStatus('⚠ Microphone access denied');
       }
     }
   }
 
   if(!sysTrack && !micTrack){
-    if(enableMic) setStatus('⚠ No audio sources available');
     return null;
   }
 
   try{
-    audioCtx = new AudioContext();
+    if (!audioCtx || audioCtx.state === 'closed') {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
     if(audioCtx.state === 'suspended') await audioCtx.resume();
 
     const dest = audioCtx.createMediaStreamDestination();
@@ -1546,10 +1547,23 @@ async function selectSource() {
 
 async function start(){
   if(isRecording) return;
+
+  // Initialize AudioContext immediately on user gesture to avoid auto-play blocks
+  try {
+    if (!audioCtx || audioCtx.state === 'closed') {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+  } catch (e) {
+    console.error('Failed to init AudioContext:', e);
+  }
+
   chunksWebm = []; chunksMp4 = [];
   blobWebm = null; blobMp4 = null; stopCount = 0;
   recWebm = null; recMp4 = null;
-  screenStream = camStream = sysAudioStream = audioCtx = gainNode = analyser = null;
+  screenStream = camStream = sysAudioStream = gainNode = analyser = null;
   drawVid = null; camVid = null;
 
   const m = getMode();
@@ -1694,11 +1708,9 @@ async function start(){
     // Audio check and feedback
     const wantAnyAudio = wantSysAudio || micToggle.checked;
     if (wantAnyAudio && !recAudioTrack) {
-      setStatus('⚠ Recording started WITHOUT audio (check permissions)');
-      setTimeout(() => { if(isRecording) setStatus('Recording… (No audio captured)'); }, 3000);
-    } else if (wantSysAudio && !screenStream.getAudioTracks().length && m !== 'camera') {
-      setStatus('⚠ System audio NOT captured (did you check "Share audio"?)');
-      setTimeout(() => { if(isRecording) setStatus('Recording… (No system audio)'); }, 4000);
+      setStatus('⚠ No audio captured — check permissions & "Share audio"');
+    } else if (wantSysAudio && (!screenStream || !screenStream.getAudioTracks().length) && m !== 'camera') {
+      setStatus('⚠ System audio missing — did you check "Share audio"?');
     }
 
     const recStream = new MediaStream([videoTrack, audioTrack].filter(Boolean));
