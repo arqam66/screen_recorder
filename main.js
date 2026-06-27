@@ -1,5 +1,6 @@
-const { app, BrowserWindow, Menu, shell, desktopCapturer } = require('electron');
+const { app, BrowserWindow, Menu, shell, desktopCapturer, ipcMain, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs');
 
 app.commandLine.appendSwitch('enable-features', 'WebRTC-H264WithOpenH264FFmpeg');
 // Required for WASAPI system-audio loopback capture on Windows 10/11
@@ -20,6 +21,7 @@ function createWindow() {
       nodeIntegration: false,
       contextIsolation: true,
       webSecurity: true,
+      preload: path.join(__dirname, 'preload.js'),
     },
     backgroundColor: '#080b12',
     show: false,
@@ -36,18 +38,41 @@ function createWindow() {
     callback(allowed.includes(permission));
   });
 
-  // Handle getDisplayMedia — provide a real DesktopCapturerSource.
-  // 'audio: loopback' enables WASAPI system-audio loopback on Windows (Electron 28+).
-  // The renderer controls whether system audio is actually used via getUserMedia constraints.
-  win.webContents.session.setDisplayMediaRequestHandler(async (request, callback) => {
-    const sources = await desktopCapturer.getSources({ types: ['screen', 'window'] });
-    const primary = sources.find(s => /screen|display/i.test(s.name)) || sources[0];
-    if (primary) {
-      // Pass 'loopback' for system audio on Windows; harmless on other platforms
-      callback({ video: primary, audio: 'loopback' });
-    } else {
-      callback({});
+  // Handle getDisplayMedia
+  win.webContents.session.setDisplayMediaRequestHandler((request, callback) => {
+    if (request.videoRequested) {
+      // We will handle the actual source selection in the renderer via IPC
+      // and then call getDisplayMedia with the specific sourceId if needed.
+      // However, for now, we'll allow the request and the renderer will
+      // provide the sourceId in the constraints.
+      // But Electron's getDisplayMedia doesn't always show the picker.
+      // If we want to show our own picker, we need to pass the source here.
     }
+    callback({ audio: 'loopback' }); // Default to allowing loopback
+  });
+
+  ipcMain.handle('get-sources', async () => {
+    const sources = await desktopCapturer.getSources({ types: ['window', 'screen'], thumbnailSize: { width: 150, height: 150 } });
+    return sources.map(source => ({
+      id: source.id,
+      name: source.name,
+      thumbnail: source.thumbnail.toDataURL(),
+    }));
+  });
+
+  ipcMain.handle('save-file', async (event, { buffer, suggestedName }) => {
+    const { filePath } = await dialog.showSaveDialog(win, {
+      defaultPath: suggestedName,
+      filters: [
+        { name: 'Videos', extensions: ['webm', 'mp4'] }
+      ]
+    });
+
+    if (filePath) {
+      fs.writeFileSync(filePath, buffer);
+      return true;
+    }
+    return false;
   });
 
   win.loadFile('index.html');
