@@ -305,6 +305,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .btn-ghost{background:var(--surface);color:var(--text);border:1.5px solid var(--border2);box-shadow:var(--shadow)}
 .btn-ghost:not(:disabled):hover{background:var(--surface2);border-color:var(--border2)}
 .btn-icon{padding:10px 13px}
+.btn-sm{padding:6px 14px;font-size:11px}
 
 /* ── Status bar ── */
 .status-bar{
@@ -592,6 +593,9 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   </div>
   <span class="app-subtitle">No upload · no limits</span>
   <div class="header-spacer"></div>
+  <a href="https://github.com/arqam/screen-recorder/releases" class="btn btn-ghost btn-sm hidden" id="downloadAppBtn" target="_blank">
+    ⬇ Download for Windows
+  </a>
   <div class="header-badges">
     <div class="rec-badge" id="recBadge"><div class="rec-dot-live"></div> REC</div>
     <div class="sys-audio-badge" id="sysAudioBadge">🔊 Sys Audio</div>
@@ -905,6 +909,11 @@ function applyTheme(t){
 }
 applyTheme(theme);
 $('themeBtn').addEventListener('click', () => applyTheme(theme === 'dark' ? 'light' : 'dark'));
+
+// Show download button if not in Electron
+if (typeof window.electronAPI === 'undefined') {
+  $('downloadAppBtn').classList.remove('hidden');
+}
 
 // ── Accordion helper ─────────────────────────────────────────────────────────
 function toggleAccordion(id){
@@ -1418,7 +1427,7 @@ colorDot.style.background = drawColor;
 function addHistoryEntry({blob, filename, duration, size, mode}){
   const id = nextHistoryId++;
   const url = URL.createObjectURL(blob);
-  const entry = {id, url, filename, duration, size, mode, time: new Date().toLocaleTimeString()};
+  const entry = {id, url, blob, filename, duration, size, mode, time: new Date().toLocaleTimeString()};
   history.unshift(entry);
   renderHistory();
 
@@ -1477,11 +1486,16 @@ function renderHistory(){
   });
 }
 
-function histDownload(id){
+async function histDownload(id){
   const e = history.find(h => h.id === id);
   if(!e) return;
-  const a = Object.assign(document.createElement('a'), {href:e.url, download:e.filename});
-  a.click();
+
+  if (typeof window.electronAPI !== 'undefined' && window.electronAPI.saveFile) {
+    await window.electronAPI.saveFile(e.blob, e.filename);
+  } else {
+    const a = Object.assign(document.createElement('a'), {href:e.url, download:e.filename});
+    a.click();
+  }
 }
 
 function histDelete(id){
@@ -1507,10 +1521,18 @@ async function selectSource() {
     sources.forEach(source => {
       const item = document.createElement('div');
       item.className = 'source-item';
-      item.innerHTML = `
-        <img src="${source.thumbnail}" class="source-thumb">
-        <div class="source-name">${source.name}</div>
-      `;
+
+      const img = document.createElement('img');
+      img.src = source.thumbnail;
+      img.className = 'source-thumb';
+
+      const name = document.createElement('div');
+      name.className = 'source-name';
+      name.textContent = source.name;
+
+      item.appendChild(img);
+      item.appendChild(name);
+
       item.onclick = () => {
         sourcePickerModal.style.display = 'none';
         resolve(source.id);
@@ -1560,25 +1582,27 @@ async function start(){
         }
       }
 
-      // audio:true → Electron's setDisplayMediaRequestHandler returns WASAPI loopback
-      const constraints = {
-        video: sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: sourceId,
-            maxWidth: 1920,
-            maxHeight: 1080,
-            maxFrameRate: 30
-          }
-        } : true,
-        audio: wantSysAudio ? (sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop'
-          }
-        } : true) : false
-      };
-
-      screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (sourceId) {
+        const constraints = {
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: sourceId
+            }
+          },
+          audio: wantSysAudio ? {
+            mandatory: {
+              chromeMediaSource: 'desktop'
+            }
+          } : false
+        };
+        screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } else {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: wantSysAudio
+        });
+      }
       videoTrack = screenStream.getVideoTracks()[0];
       // Use video-only stream for preview — avoids audio-track conflicts with WebAudio
       mainVideo.srcObject = new MediaStream([videoTrack]);
@@ -1620,24 +1644,27 @@ async function start(){
         }
       }
 
-      const constraints = {
-        video: sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: sourceId,
-            maxWidth: 1920,
-            maxHeight: 1080,
-            maxFrameRate: 30
-          }
-        } : true,
-        audio: wantSysAudio ? (sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop'
-          }
-        } : true) : false
-      };
-
-      screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (sourceId) {
+        const constraints = {
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: sourceId
+            }
+          },
+          audio: wantSysAudio ? {
+            mandatory: {
+              chromeMediaSource: 'desktop'
+            }
+          } : false
+        };
+        screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } else {
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: true,
+          audio: wantSysAudio
+        });
+      }
       setStatus('Step 2: Allow camera…');
       camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       setStatus('Building composite…');
