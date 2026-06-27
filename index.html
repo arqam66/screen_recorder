@@ -455,17 +455,98 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
 .history-btn.del:hover{border-color:rgba(239,68,68,.3);color:var(--red)}
 
 /* ══════════════════════════════════════════════════
-   PREVIEW MODAL
+   MODALS
 ══════════════════════════════════════════════════ */
-#preview-modal{
-  position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;
-  align-items:center;justify-content:center;z-index:1000;padding:20px;
-  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.88);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
 }
+.modal-box {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border2);
+  animation: modalIn .25s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+.modal-close {
+  background: none;
+  border: none;
+  color: var(--sub);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 5px;
+  transition: color var(--transition);
+}
+.modal-close:hover {
+  color: var(--text);
+}
+
+/* ── Source Picker ── */
+.source-picker-box {
+  max-width: 900px;
+  width: 100%;
+}
+.source-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding: 4px;
+}
+.source-item {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px;
+  cursor: pointer;
+  transition: all var(--transition);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.source-item:hover {
+  border-color: var(--accent);
+  background: var(--surface3);
+  transform: translateY(-2px);
+}
+.source-thumb {
+  width: 100%;
+  aspect-ratio: 16/9;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  background: #000;
+}
+.source-name {
+  font-size: 12px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── Preview Modal ── */
 #preview-modal .modal-box{
-  background:var(--surface);border-radius:var(--radius-lg);padding:24px;
-  max-width:880px;width:100%;box-shadow:var(--shadow-lg);
-  border:1px solid var(--border2);animation:modalIn .25s ease;max-height:90vh;overflow-y:auto;
+  max-width:880px;width:100%;
 }
 @keyframes modalIn{from{opacity:0;transform:translateY(14px) scale(.97)}to{opacity:1;transform:none}}
 #preview-modal h3{margin-bottom:16px;font-size:17px;font-weight:800;letter-spacing:-.3px}
@@ -650,7 +731,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
       <div class="accordion-body">
         <div class="field">
           <label class="field-label">Filename template</label>
-          <input type="text" id="filenameTemplate" placeholder="recording-{date}-{time}" value="recording-{date}-{time}"/>
+          <input type="text" id="filenameTemplate" placeholder="recording-{date}-{time}" value="recording-{date}-{time}" maxlength="64"/>
           <div class="fn-hint">
             Tokens: <code>{date}</code> <code>{time}</code> <code>{mode}</code>
           </div>
@@ -741,8 +822,24 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
   <button id="countdown-cancel">✕ Cancel (Esc)</button>
 </div>
 
+<!-- Source Picker Modal -->
+<div id="source-picker-modal" class="modal-overlay">
+  <div class="modal-box source-picker-box">
+    <div class="modal-header">
+      <h3>Select Screen or Window</h3>
+      <button class="modal-close" id="closeSourcePicker">✕</button>
+    </div>
+    <div class="source-list" id="sourceList">
+      <!-- Sources will be injected here -->
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="cancelSourcePicker">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <!-- Preview / download modal -->
-<div id="preview-modal">
+<div id="preview-modal" class="modal-overlay">
   <div class="modal-box">
     <h3>Preview recording</h3>
     <video id="previewVid" controls></video>
@@ -753,7 +850,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
     </div>
     <div class="modal-filename">
       <label>Save as</label>
-      <input type="text" id="saveFilename" placeholder="recording-{date}-{time}"/>
+      <input type="text" id="saveFilename" placeholder="recording-{date}-{time}" maxlength="128"/>
       <div class="fn-hint">Tokens: <code>{date}</code> <code>{time}</code> <code>{mode}</code></div>
     </div>
     <div class="modal-actions">
@@ -781,6 +878,8 @@ const mainVideo     = $('mainVideo'),   composite   = $('composite');
 const ctx           = composite.getContext('2d');
 const viewLabel     = $('viewLabel'),   drawBar     = $('draw-bar');
 const previewModal  = $('preview-modal'),previewVid = $('previewVid');
+const sourcePickerModal = $('source-picker-modal'), sourceList = $('sourceList');
+const closeSourcePicker = $('closeSourcePicker'), cancelSourcePicker = $('cancelSourcePicker');
 const dlWebmBtn     = $('dlWebmBtn'),   dlMp4Btn   = $('dlMp4Btn');
 const discardBtn    = $('discardBtn');
 const recBadge      = $('recBadge'),    sysAudioBadge = $('sysAudioBadge');
@@ -889,7 +988,6 @@ document.querySelectorAll('.mode-card').forEach(card => {
 instrEl.innerHTML = INSTRS.screen;
 instrEl.style.display = 'block';
 
-// Microphone is disabled — this recorder captures system audio only (WASAPI loopback).
 
 // ── MP4 support detection ─────────────────────────────────────────────────────
 const MP4_MIME = [
@@ -1008,15 +1106,26 @@ function stopTimer(){
   recBadge.classList.remove('visible');
 }
 
+function sanitizeInput(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function expandFilename(template, mode){
   const now = new Date();
   const date = now.toISOString().slice(0,10);
   const time = now.toTimeString().slice(0,8).replace(/:/g,'-');
-  return (template || 'recording-{date}-{time}')
+
+  // Security: Limit template length and sanitize
+  const safeTemplate = (template || 'recording-{date}-{time}').slice(0, 128);
+
+  return safeTemplate
     .replace(/\{date\}/g, date)
     .replace(/\{time\}/g, time)
     .replace(/\{mode\}/g, mode)
-    .replace(/[\\/:*?"<>|]/g, '_');
+    .replace(/[\\/:*?"<>|]/g, '_')
+    .replace(/[^\w\-. ]/g, ''); // Extra security: only allow safe chars in filenames
 }
 
 function fmtSize(bytes){ return (bytes/1024/1024).toFixed(1) + ' MB'; }
@@ -1125,6 +1234,9 @@ async function setupAudioMixer(sysStream, enableMic){
       micSrc.connect(micGain);
       micGain.connect(analyser);
       micGain.connect(dest);
+
+      // Add visual feedback for mic status
+      micBadge.classList.add('visible');
     }
 
     return dest.stream.getAudioTracks()[0] || sysTrack || micTrack;
@@ -1140,9 +1252,18 @@ function startMeter(){
   const data = new Uint8Array(analyser.frequencyBinCount);
   meterWrap.style.display = 'flex';
   const tick = () => {
+    if (!analyser) return;
     analyser.getByteFrequencyData(data);
     const avg = data.reduce((a,b)=>a+b,0)/data.length;
-    meterBar.style.width = Math.min(100, avg * 2) + '%';
+    // Enhanced meter sensitivity and smoothing
+    const level = Math.min(100, avg * 2.5);
+    meterBar.style.width = level + '%';
+
+    // Change color based on level
+    if (level > 85) meterBar.style.background = 'var(--red)';
+    else if (level > 60) meterBar.style.background = 'var(--yellow)';
+    else meterBar.style.background = 'linear-gradient(90deg, var(--green), var(--yellow))';
+
     meterRaf = requestAnimationFrame(tick);
   };
   meterRaf = requestAnimationFrame(tick);
@@ -1322,24 +1443,38 @@ function addHistoryEntry({blob, filename, duration, size, mode}){
 function renderHistory(){
   historyCount.textContent = history.length;
   historyEmpty.style.display = history.length ? 'none' : 'block';
-  historyList.innerHTML = history.map(e => `
-    <div class="history-item" id="hist-${e.id}">
+  historyList.innerHTML = '';
+
+  history.forEach(e => {
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.id = `hist-${e.id}`;
+
+    // Security: Use textContent for user-provided data to prevent XSS
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'history-name';
+    nameDiv.title = e.filename;
+    nameDiv.textContent = e.filename;
+
+    item.innerHTML = `
       <img class="history-thumb" src="${e.thumbUrl || ''}" alt="thumbnail" onerror="this.src=''"/>
       <div class="history-meta">
-        <div class="history-name" title="${e.filename}">${e.filename}</div>
         <div class="history-info">
-          <span>${e.time}</span>
+          <span>${sanitizeInput(e.time)}</span>
           <span>${fmtTime(e.duration)}</span>
           <span>${fmtSize(e.size)}</span>
-          <span class="history-badge ${e.mode}">${e.mode}</span>
+          <span class="history-badge ${sanitizeInput(e.mode)}">${sanitizeInput(e.mode)}</span>
         </div>
       </div>
       <div class="history-actions">
         <button class="history-btn dl" onclick="histDownload(${e.id})">⬇</button>
         <button class="history-btn del" onclick="histDelete(${e.id})">🗑</button>
       </div>
-    </div>
-  `).join('');
+    `;
+
+    item.querySelector('.history-meta').prepend(nameDiv);
+    historyList.appendChild(item);
+  });
 }
 
 function histDownload(id){
@@ -1359,6 +1494,42 @@ function histDelete(id){
 }
 
 // ── Main recording flow ───────────────────────────────────────────────────────
+async function selectSource() {
+  if (typeof window.electronAPI === 'undefined') {
+    // If not in Electron, use standard getDisplayMedia (browser)
+    return null;
+  }
+
+  return new Promise(async (resolve) => {
+    const sources = await window.electronAPI.getSources();
+    sourceList.innerHTML = '';
+
+    sources.forEach(source => {
+      const item = document.createElement('div');
+      item.className = 'source-item';
+      item.innerHTML = `
+        <img src="${source.thumbnail}" class="source-thumb">
+        <div class="source-name">${source.name}</div>
+      `;
+      item.onclick = () => {
+        sourcePickerModal.style.display = 'none';
+        resolve(source.id);
+      };
+      sourceList.appendChild(item);
+    });
+
+    sourcePickerModal.style.display = 'flex';
+
+    const cancel = () => {
+      sourcePickerModal.style.display = 'none';
+      resolve(null);
+    };
+
+    closeSourcePicker.onclick = cancel;
+    cancelSourcePicker.onclick = cancel;
+  });
+}
+
 async function start(){
   if(isRecording) return;
   chunksWebm = []; chunksMp4 = [];
@@ -1379,11 +1550,35 @@ async function start(){
 
     if(m === 'screen'){
       setStatus('Waiting for screen share…');
+
+      let sourceId = null;
+      if (typeof window.electronAPI !== 'undefined') {
+        sourceId = await selectSource();
+        if (!sourceId) {
+          setStatus('Ready');
+          return;
+        }
+      }
+
       // audio:true → Electron's setDisplayMediaRequestHandler returns WASAPI loopback
-      screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: wantSysAudio
-      });
+      const constraints = {
+        video: sourceId ? {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: sourceId,
+            maxWidth: 1920,
+            maxHeight: 1080,
+            maxFrameRate: 30
+          }
+        } : true,
+        audio: wantSysAudio ? (sourceId ? {
+          mandatory: {
+            chromeMediaSource: 'desktop'
+          }
+        } : true) : false
+      };
+
+      screenStream = await navigator.mediaDevices.getUserMedia(constraints);
       videoTrack = screenStream.getVideoTracks()[0];
       // Use video-only stream for preview — avoids audio-track conflicts with WebAudio
       mainVideo.srcObject = new MediaStream([videoTrack]);
@@ -1415,10 +1610,34 @@ async function start(){
     } else {
       // Screen + Camera overlay
       setStatus('Step 1: Pick a screen / window to record…');
-      screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: wantSysAudio  // WASAPI loopback for system audio
-      });
+
+      let sourceId = null;
+      if (typeof window.electronAPI !== 'undefined') {
+        sourceId = await selectSource();
+        if (!sourceId) {
+          setStatus('Ready');
+          return;
+        }
+      }
+
+      const constraints = {
+        video: sourceId ? {
+          mandatory: {
+            chromeMediaSource: 'desktop',
+            chromeMediaSourceId: sourceId,
+            maxWidth: 1920,
+            maxHeight: 1080,
+            maxFrameRate: 30
+          }
+        } : true,
+        audio: wantSysAudio ? (sourceId ? {
+          mandatory: {
+            chromeMediaSource: 'desktop'
+          }
+        } : true) : false
+      };
+
+      screenStream = await navigator.mediaDevices.getUserMedia(constraints);
       setStatus('Step 2: Allow camera…');
       camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       setStatus('Building composite…');
@@ -1575,6 +1794,12 @@ function cleanup(resetUI = true){
 
 // ── Save helper ───────────────────────────────────────────────────────────────
 async function saveAs(blob, suggestedName){
+  // Check if we're in Electron and can use the improved save dialog
+  if (typeof window.electronAPI !== 'undefined' && window.electronAPI.saveFile) {
+    const success = await window.electronAPI.saveFile(blob, suggestedName);
+    if (success) return;
+  }
+
   if('showSaveFilePicker' in window){
     const ext = suggestedName.split('.').pop();
     const mimeMap = {mp4:'video/mp4', webm:'video/webm'};
