@@ -705,7 +705,7 @@ input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;bac
           <div class="toggle-row">
             <span class="toggle-label" title="Record from your microphone">Microphone <span class="field-sub">(voice)</span></span>
             <label class="toggle">
-              <input type="checkbox" id="micToggle" title="Enable microphone" aria-label="Enable microphone"/>
+              <input type="checkbox" id="micToggle" checked title="Enable microphone" aria-label="Enable microphone"/>
               <span class="toggle-slider"></span>
             </label>
           </div>
@@ -1184,20 +1184,25 @@ async function makeOffscreenVideo(stream){
 // Routes all audio sources through WebAudio for gain control, analysis, and mixing.
 // KEY: createMediaStreamSource must receive audio-ONLY streams — WebAudio silently
 // ignores mixed video+audio streams in Chromium/Electron.
-async function setupAudioMixer(sysStream, enableMic){
+async function setupAudioMixer(sysStream, enableMic, existingMicStream = null){
   const sysTracks = sysStream?.getAudioTracks() ?? [];
   const sysTrack  = sysTracks[0] || null;
   let   micTrack  = null;
 
   // Request microphone if enabled
   if(enableMic){
-    try{
-      const ms = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      micStream = ms;
-      micTrack = ms.getAudioTracks()[0] || null;
-    }catch(err){
-      console.warn('[Mic] access denied:', err);
-      setStatus('⚠ Microphone access denied — recording without mic');
+    if (existingMicStream && existingMicStream.getAudioTracks().length > 0) {
+      micStream = existingMicStream;
+      micTrack = existingMicStream.getAudioTracks()[0];
+    } else {
+      try{
+        const ms = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        micStream = ms;
+        micTrack = ms.getAudioTracks()[0] || null;
+      }catch(err){
+        console.warn('[Mic] access denied:', err);
+        setStatus('⚠ Microphone access denied — recording without mic');
+      }
     }
   }
 
@@ -1223,6 +1228,9 @@ async function setupAudioMixer(sysStream, enableMic){
       sysSrc.connect(gainNode);
       gainNode.connect(analyser);
       gainNode.connect(dest);
+      updateSysAudioBadge(true);
+    } else if (sysStream && sysStream.getAudioTracks().length === 0) {
+      console.warn('[Audio] System audio requested but not provided by stream');
     }
 
     // Microphone source
@@ -1236,10 +1244,14 @@ async function setupAudioMixer(sysStream, enableMic){
       micGain.connect(dest);
 
       // Add visual feedback for mic status
-      micBadge.classList.add('visible');
+      updateMicBadge(true);
     }
 
-    return dest.stream.getAudioTracks()[0] || sysTrack || micTrack;
+    const mixedTrack = dest.stream.getAudioTracks()[0] || sysTrack || micTrack;
+    if (!mixedTrack) {
+      console.warn('[Audio] No mixed audio track produced');
+    }
+    return mixedTrack;
   }catch(err){
     console.warn('[AudioContext] failed, using raw tracks:', err);
     return sysTrack || micTrack;
@@ -1596,23 +1608,20 @@ async function start(){
       viewLabel.textContent = 'Screen';
       viewEl.style.display = 'block';
       disableDrawing();
-      if(wantSysAudio) updateSysAudioBadge(true);
-      if(wantMic) updateMicBadge(true);
 
     } else if(m === 'camera'){
       // Camera-only: no system audio, but mic can be used
-      setStatus('Waiting for camera…');
-      camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
-      videoTrack = camStream.getVideoTracks()[0];
+      setStatus('Waiting for camera & mic…');
       const wantMic = micToggle.checked;
-      audioTrack = wantMic ? await setupAudioMixer(null, true) : null;
+      camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: wantMic });
+      videoTrack = camStream.getVideoTracks()[0];
+      audioTrack = wantMic ? await setupAudioMixer(null, true, camStream) : null;
       mainVideo.srcObject = camStream;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
       viewLabel.textContent = 'Camera';
       viewEl.style.display = 'block';
       disableDrawing();
-      if(wantMic) updateMicBadge(true);
 
     } else {
       // Screen + Camera overlay
@@ -1652,8 +1661,12 @@ async function start(){
           audio: wantSysAudio
         });
       }
-      setStatus('Step 2: Allow camera…');
-      camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      setStatus('Step 2: Allow camera & mic…');
+      const wantMic = micToggle.checked;
+      camStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: wantMic
+      });
       setStatus('Building composite…');
       const [sv, cv] = await Promise.all([
         makeOffscreenVideo(screenStream),
@@ -1673,13 +1686,22 @@ async function start(){
       if(!videoTrack) throw new Error('Canvas capture failed — no video track');
       // System audio comes from the screen share stream + optional mic
       const wantMic = micToggle.checked;
-      audioTrack = (wantSysAudio || wantMic) ? await setupAudioMixer(screenStream, wantMic) : null;
-      if(wantSysAudio) updateSysAudioBadge(true);
-      if(wantMic) updateMicBadge(true);
+      audioTrack = (wantSysAudio || wantMic) ? await setupAudioMixer(screenStream, wantMic, camStream) : null;
     }
 
     if(!videoTrack) throw new Error('No video track available');
     recAudioTrack = audioTrack || null;
+
+    // Audio check and feedback
+    const wantAnyAudio = wantSysAudio || micToggle.checked;
+    if (wantAnyAudio && !recAudioTrack) {
+      setStatus('⚠ Recording started WITHOUT audio (check permissions)');
+      setTimeout(() => { if(isRecording) setStatus('Recording… (No audio captured)'); }, 3000);
+    } else if (wantSysAudio && !screenStream.getAudioTracks().length && m !== 'camera') {
+      setStatus('⚠ System audio NOT captured (did you check "Share audio"?)');
+      setTimeout(() => { if(isRecording) setStatus('Recording… (No system audio)'); }, 4000);
+    }
+
     const recStream = new MediaStream([videoTrack, audioTrack].filter(Boolean));
 
     // Countdown — can be aborted

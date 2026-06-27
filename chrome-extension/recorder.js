@@ -216,11 +216,11 @@ async function start(){
 
     if(m === 'screen'){
       setStatus('Waiting for screen share…');
-      screenStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:false});
+      screenStream = await navigator.mediaDevices.getDisplayMedia({video:true, audio:true});
       let mic=null;
       try{ mic=await navigator.mediaDevices.getUserMedia({audio:true,video:false}); }catch(_){}
       vt = screenStream.getVideoTracks()[0];
-      at = mic ? mixAudio(mic) : null;
+      at = mic ? mixAudio(screenStream, mic) : mixAudio(screenStream);
       mainV.srcObject=screenStream; mainV.style.display='block';
       canvas.style.display='none'; view.style.display='block';
       dbar.style.display='none';
@@ -236,7 +236,7 @@ async function start(){
 
     } else {
       setStatus('Pick a Chrome Tab to record…');
-      screenStream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:false});
+      screenStream = await navigator.mediaDevices.getDisplayMedia({video:true,audio:true});
       setStatus('Allow camera & mic…');
       camStream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
       setStatus('Building composite…');
@@ -251,7 +251,7 @@ async function start(){
       canvas.style.cursor='crosshair';
 
       vt = canvas.captureStream(30).getVideoTracks()[0];
-      at = mixAudio(camStream);
+      at = mixAudio(screenStream, camStream);
     }
 
     const recStream = new MediaStream([vt,at].filter(Boolean));
