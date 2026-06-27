@@ -1560,25 +1560,32 @@ async function start(){
         }
       }
 
-      // audio:true → Electron's setDisplayMediaRequestHandler returns WASAPI loopback
-      const constraints = {
-        video: sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: sourceId,
-            maxWidth: 1920,
-            maxHeight: 1080,
-            maxFrameRate: 30
-          }
-        } : true,
-        audio: wantSysAudio ? (sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop'
-          }
-        } : true) : false
-      };
-
-      screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (sourceId) {
+        // audio:true → Electron's setDisplayMediaRequestHandler returns WASAPI loopback
+        const constraints = {
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: sourceId,
+              maxWidth: 1920,
+              maxHeight: 1080,
+              maxFrameRate: 30
+            }
+          },
+          audio: wantSysAudio ? {
+            mandatory: {
+              chromeMediaSource: 'desktop'
+            }
+          } : false
+        };
+        screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } else {
+        // Standard browser screen capture
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: 'always' },
+          audio: wantSysAudio
+        });
+      }
       videoTrack = screenStream.getVideoTracks()[0];
       // Use video-only stream for preview — avoids audio-track conflicts with WebAudio
       mainVideo.srcObject = new MediaStream([videoTrack]);
@@ -1620,24 +1627,31 @@ async function start(){
         }
       }
 
-      const constraints = {
-        video: sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop',
-            chromeMediaSourceId: sourceId,
-            maxWidth: 1920,
-            maxHeight: 1080,
-            maxFrameRate: 30
-          }
-        } : true,
-        audio: wantSysAudio ? (sourceId ? {
-          mandatory: {
-            chromeMediaSource: 'desktop'
-          }
-        } : true) : false
-      };
-
-      screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      if (sourceId) {
+        const constraints = {
+          video: {
+            mandatory: {
+              chromeMediaSource: 'desktop',
+              chromeMediaSourceId: sourceId,
+              maxWidth: 1920,
+              maxHeight: 1080,
+              maxFrameRate: 30
+            }
+          },
+          audio: wantSysAudio ? {
+            mandatory: {
+              chromeMediaSource: 'desktop'
+            }
+          } : false
+        };
+        screenStream = await navigator.mediaDevices.getUserMedia(constraints);
+      } else {
+        // Standard browser screen capture
+        screenStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { cursor: 'always' },
+          audio: wantSysAudio
+        });
+      }
       setStatus('Step 2: Allow camera…');
       camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
       setStatus('Building composite…');
