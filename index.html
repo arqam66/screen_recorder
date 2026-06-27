@@ -1306,7 +1306,8 @@ function drawCamOverlay(cv){
     const r = Math.min(w,h)/2;
     ctx.arc(x+w/2, y+h/2, r, 0, Math.PI*2);
   } else {
-    ctx.roundRect(x, y, w, h, 10);
+    if (ctx.roundRect) ctx.roundRect(x, y, w, h, 10);
+    else ctx.rect(x, y, w, h);
   }
   ctx.clip();
   ctx.drawImage(cv, x, y, w, h);
@@ -1318,7 +1319,8 @@ function drawCamOverlay(cv){
     const r = Math.min(w,h)/2;
     ctx.arc(x+w/2, y+h/2, r, 0, Math.PI*2);
   } else {
-    ctx.roundRect(x, y, w, h, 10);
+    if (ctx.roundRect) ctx.roundRect(x, y, w, h, 10);
+    else ctx.rect(x, y, w, h);
   }
   ctx.stroke();
 }
@@ -1556,6 +1558,7 @@ async function start(){
   // System audio is always requested for screen/both modes via WASAPI loopback.
   // Camera-only mode has no output device to capture from.
   const wantSysAudio = sysAudioToggle.checked && m !== 'camera';
+  const wantMic      = micToggle.checked;
 
   try{
     let videoTrack, audioTrack;
@@ -1601,7 +1604,6 @@ async function start(){
       videoTrack = screenStream.getVideoTracks()[0];
       // Use video-only stream for preview — avoids audio-track conflicts with WebAudio
       mainVideo.srcObject = new MediaStream([videoTrack]);
-      const wantMic = micToggle.checked;
       audioTrack = (wantSysAudio || wantMic) ? await setupAudioMixer(screenStream, wantMic) : null;
       mainVideo.style.display = 'block';
       composite.style.display = 'none';
@@ -1612,7 +1614,6 @@ async function start(){
     } else if(m === 'camera'){
       // Camera-only: no system audio, but mic can be used
       setStatus('Waiting for camera & mic…');
-      const wantMic = micToggle.checked;
       camStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: wantMic });
       videoTrack = camStream.getVideoTracks()[0];
       audioTrack = wantMic ? await setupAudioMixer(null, true, camStream) : null;
@@ -1662,7 +1663,6 @@ async function start(){
         });
       }
       setStatus('Step 2: Allow camera & mic…');
-      const wantMic = micToggle.checked;
       camStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: wantMic
@@ -1685,7 +1685,6 @@ async function start(){
       videoTrack = canvasStream.getVideoTracks()[0];
       if(!videoTrack) throw new Error('Canvas capture failed — no video track');
       // System audio comes from the screen share stream + optional mic
-      const wantMic = micToggle.checked;
       audioTrack = (wantSysAudio || wantMic) ? await setupAudioMixer(screenStream, wantMic, camStream) : null;
     }
 
