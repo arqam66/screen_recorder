@@ -78,7 +78,9 @@ function countdown(n){
 
 // ── Audio ─────────────────────────────────────────────────────────────
 function mixAudio(...streams){
-  audioCtx = new AudioContext();
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
   const dest = audioCtx.createMediaStreamDestination();
   analyser  = audioCtx.createAnalyser(); analyser.fftSize = 256;
   streams.forEach(s => {
@@ -207,8 +209,18 @@ $('ci').addEventListener('input',e=>{ drawColor=e.target.value; $('cpick').style
 
 // ── Main flow ─────────────────────────────────────────────────────────
 async function start(){
+  // Initialize AudioContext on user gesture
+  try {
+    if (!audioCtx || audioCtx.state === 'closed') {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (audioCtx.state === 'suspended') {
+      await audioCtx.resume();
+    }
+  } catch (e) { console.error(e); }
+
   chunks=[]; savedBlob=null;
-  screenStream=camStream=audioCtx=null; drawVid=null; vfcId=null;
+  screenStream=camStream=null; drawVid=null; vfcId=null;
 
   try{
     let vt, at;
